@@ -1,0 +1,16 @@
+[1.118s] Invoking command in '/home/raaf/tiago_public_ws/build/launch_pal': PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/tiago_public_ws/build/launch_pal/build --no-deps symlink_data
+[1.515s] running develop
+[1.765s] running egg_info
+[1.766s] writing launch_pal.egg-info/PKG-INFO
+[1.766s] writing dependency_links to launch_pal.egg-info/dependency_links.txt
+[1.766s] writing entry points to launch_pal.egg-info/entry_points.txt
+[1.766s] writing requirements to launch_pal.egg-info/requires.txt
+[1.766s] writing top-level names to launch_pal.egg-info/top_level.txt
+[1.769s] reading manifest file 'launch_pal.egg-info/SOURCES.txt'
+[1.770s] writing manifest file 'launch_pal.egg-info/SOURCES.txt'
+[1.772s] running build_ext
+[1.772s] Creating /home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages/launch-pal.egg-link (link to .)
+[1.773s] 
+[1.773s] Installed /home/raaf/tiago_public_ws/build/launch_pal
+[1.773s] running symlink_data
+[1.806s] Invoked command in '/home/raaf/tiago_public_ws/build/launch_pal' returned '0': PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/tiago_public_ws/build/launch_pal/build --no-deps symlink_data

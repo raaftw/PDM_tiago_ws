@@ -1,0 +1,144 @@
+[0.022s] Invoking command in '/home/raaf/tiago_public_ws/build/tiago_description': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/pmb2_description/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/tiago_robot/tiago_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/tiago_description
+[0.108s] -- The C compiler identification is GNU 11.4.0
+[0.239s] -- The CXX compiler identification is GNU 11.4.0
+[0.250s] -- Detecting C compiler ABI info
+[0.334s] -- Detecting C compiler ABI info - done
+[0.342s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.342s] -- Detecting C compile features
+[0.343s] -- Detecting C compile features - done
+[0.345s] -- Detecting CXX compiler ABI info
+[0.433s] -- Detecting CXX compiler ABI info - done
+[0.451s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.451s] -- Detecting CXX compile features
+[0.452s] -- Detecting CXX compile features - done
+[0.456s] -- Found ament_cmake_auto: 1.3.12 (/opt/ros/humble/share/ament_cmake_auto/cmake)
+[0.721s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.828s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.992s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.034s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[1.067s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+[1.094s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+[1.094s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.094s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[1.094s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[1.132s] -- Found PythonExtra: .so  
+[2.006s] -- Added test 'copyright' to check source files copyright and LICENSE
+[2.024s] -- Added test 'flake8' to check Python code syntax and style conventions
+[2.026s] -- Added test 'lint_cmake' to check CMake code style
+[2.028s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[2.034s] -- Added test 'xmllint' to check XML markup files
+[2.036s] -- Configuring done
+[2.045s] -- Generating done
+[2.046s] -- Build files have been written to: /home/raaf/tiago_public_ws/build/tiago_description
+[2.057s] Invoked command in '/home/raaf/tiago_public_ws/build/tiago_description' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/pmb2_description/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/tiago_robot/tiago_description -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/tiago_description
+[2.059s] Invoking command in '/home/raaf/tiago_public_ws/build/tiago_description': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/pmb2_description/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/tiago_description -- -j12 -l12
+[2.241s] Built target ament_cmake_python_symlink_tiago_description
+[2.813s] running egg_info
+[2.814s] creating tiago_description.egg-info
+[2.815s] writing tiago_description.egg-info/PKG-INFO
+[2.816s] writing dependency_links to tiago_description.egg-info/dependency_links.txt
+[2.816s] writing top-level names to tiago_description.egg-info/top_level.txt
+[2.817s] writing manifest file 'tiago_description.egg-info/SOURCES.txt'
+[2.822s] reading manifest file 'tiago_description.egg-info/SOURCES.txt'
+[2.823s] writing manifest file 'tiago_description.egg-info/SOURCES.txt'
+[2.883s] Built target ament_cmake_python_build_tiago_description_egg
+[2.907s] Invoked command in '/home/raaf/tiago_public_ws/build/tiago_description' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/pmb2_description/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/tiago_description -- -j12 -l12
+[2.908s] Invoking command in '/home/raaf/tiago_public_ws/build/tiago_description': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/pmb2_description/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/tiago_description
+[2.923s] -- Install configuration: ""
+[2.924s] -- Execute custom install script
+[2.929s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/environment/pythonpath.sh
+[2.956s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/environment/pythonpath.dsv
+[2.969s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description-4.22.0-py3.10.egg-info/PKG-INFO
+[2.982s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description-4.22.0-py3.10.egg-info/SOURCES.txt
+[3.006s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description-4.22.0-py3.10.egg-info/dependency_links.txt
+[3.034s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description-4.22.0-py3.10.egg-info/top_level.txt
+[3.068s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description/__init__.py
+[3.091s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description/launch_arguments.py
+[3.121s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description/tiago_launch_utils.py
+[3.150s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/launch/robot_state_publisher.launch.py
+[3.175s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/launch/show.launch.py
+[3.192s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_1.stl
+[3.220s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_1_collision.dae
+[3.252s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_1_color.png
+[3.275s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_1_normals.png
+[3.301s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_1_specular.png
+[3.318s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_2.stl
+[3.344s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_2_collision.dae
+[3.371s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_2_color.png
+[3.389s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_2_normals.png
+[3.418s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_2_specular.png
+[3.428s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_3.stl
+[3.443s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_3_collision.dae
+[3.457s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_3_color.png
+[3.474s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_3_normals.png
+[3.498s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_3_specular.png
+[3.517s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_4.stl
+[3.532s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_4_collision.dae
+[3.550s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_4_collision.stl
+[3.566s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_4_color.png
+[3.583s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_4_normals.png
+[3.600s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_4_specular.png
+[3.623s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_5-wrist-2010.stl
+[3.645s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_5-wrist-2017.stl
+[3.670s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_5_collision-wrist-2010.dae
+[3.685s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_5_collision-wrist-2017.dae
+[3.696s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_6-wrist-2010.stl
+[3.720s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_6-wrist-2017.stl
+[3.725s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_6_collision-wrist-2010.dae
+[3.746s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_6_collision-wrist-2017.dae
+[3.772s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_6_color.png
+[3.792s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_6_normals.png
+[3.806s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/arm/arm_6_specular.png
+[3.827s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/head/head_1.stl
+[3.837s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/head/head_1_collision.dae
+[3.850s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/head/head_2.stl
+[3.864s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/head/head_2_collision.dae
+[3.879s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/tiago_screen.stl
+[3.896s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/tiago_screen_collision.stl
+[3.929s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/torso_fix.stl
+[3.951s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/torso_lift_collision.dae
+[3.969s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/torso_lift_collision_core.dae
+[3.983s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/torso_lift_collision_neck.dae
+[4.008s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/torso_lift_collision_shoulder.dae
+[4.041s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/torso_lift_with_arm.stl
+[4.060s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/meshes/torso/torso_lift_without_arm.stl
+[4.085s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/robots/tiago.urdf.xacro
+[4.115s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/ros2_control/gazebo_controller_manager_cfg.yaml
+[4.139s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/ros2_control/ros2_control.urdf.xacro
+[4.154s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/ros2_control/transmissions.urdf.xacro
+[4.177s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/arm/arm.ros2_control.xacro
+[4.203s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/arm/arm.urdf.xacro
+[4.231s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/arm/wrist.ros2_control.xacro
+[4.248s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/arm/wrist.urdf.xacro
+[4.263s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/calibration/camera_extrinsic_calibration.urdf.xacro
+[4.277s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/calibration/camera_extrinsic_calibration.urdf.xacro.j2
+[4.293s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/calibration/eye_hand_calibration.urdf.xacro
+[4.307s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/calibration/eye_hand_calibration.urdf.xacro.j2
+[4.324s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/end_effector/end_effector.urdf.xacro
+[4.338s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/head/head.ros2_control.xacro
+[4.352s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/head/head.urdf.xacro
+[4.365s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/torso/torso.ros2_control.xacro
+[4.380s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/urdf/torso/torso.urdf.xacro
+[4.401s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/config/tiago.rviz
+[4.418s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/config/tiago_configuration.yaml
+[4.430s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/config/urdf.rviz
+[4.444s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/ament_index/resource_index/package_run_dependencies/tiago_description
+[4.462s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/ament_index/resource_index/parent_prefix_path/tiago_description
+[4.476s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/environment/ament_prefix_path.sh
+[4.489s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/environment/ament_prefix_path.dsv
+[4.503s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/environment/path.sh
+[4.517s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/environment/path.dsv
+[4.530s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/local_setup.bash
+[4.544s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/local_setup.sh
+[4.558s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/local_setup.zsh
+[4.574s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/local_setup.dsv
+[4.589s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/package.dsv
+[4.603s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/ament_index/resource_index/packages/tiago_description
+[4.618s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/cmake/tiago_descriptionConfig.cmake
+[4.630s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/cmake/tiago_descriptionConfig-version.cmake
+[4.647s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_description/share/tiago_description/package.xml
+[4.721s] Listing '/home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description'...
+[4.721s] Compiling '/home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description/__init__.py'...
+[4.721s] Compiling '/home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description/launch_arguments.py'...
+[4.721s] Compiling '/home/raaf/tiago_public_ws/install/tiago_description/local/lib/python3.10/dist-packages/tiago_description/tiago_launch_utils.py'...
+[4.732s] Invoked command in '/home/raaf/tiago_public_ws/build/tiago_description' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_description:/home/raaf/tiago_public_ws/install/pal_hey5_description:/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_robotiq_description:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/pmb2_description/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/tiago_description

@@ -1,0 +1,50 @@
+[0.022s] Invoking command in '/home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/pmb2_navigation/pmb2_rgbd_sensors -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors
+[0.162s] -- The C compiler identification is GNU 11.4.0
+[0.174s] -- The CXX compiler identification is GNU 11.4.0
+[0.185s] -- Detecting C compiler ABI info
+[0.268s] -- Detecting C compiler ABI info - done
+[0.284s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.284s] -- Detecting C compile features
+[0.285s] -- Detecting C compile features - done
+[0.290s] -- Detecting CXX compiler ABI info
+[0.408s] -- Detecting CXX compiler ABI info - done
+[0.423s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.423s] -- Detecting CXX compile features
+[0.427s] -- Detecting CXX compile features - done
+[0.431s] -- Found ament_cmake_auto: 1.3.12 (/opt/ros/humble/share/ament_cmake_auto/cmake)
+[0.687s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.788s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.958s] -- Added test 'copyright' to check source files copyright and LICENSE
+[0.961s] -- Added test 'flake8' to check Python code syntax and style conventions
+[0.961s] -- Added test 'lint_cmake' to check CMake code style
+[0.962s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[0.962s] -- Added test 'xmllint' to check XML markup files
+[0.965s] -- Configuring done
+[0.969s] -- Generating done
+[0.971s] -- Build files have been written to: /home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors
+[0.978s] Invoked command in '/home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/pmb2_navigation/pmb2_rgbd_sensors -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors
+[0.981s] Invoking command in '/home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors -- -j12 -l12
+[1.031s] Invoked command in '/home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors -- -j12 -l12
+[1.032s] Invoking command in '/home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors
+[1.095s] -- Install configuration: ""
+[1.095s] -- Execute custom install script
+[1.095s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/config/rgbd_analyzers.yaml
+[1.095s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/launch/rgbd_cobra_realsense-d435.launch.py
+[1.095s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/launch/rgbd_cobra_realsense-d435i.launch.py
+[1.095s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/launch/rgbd_cobra_structure.launch.py
+[1.095s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/ament_index/resource_index/package_run_dependencies/pmb2_rgbd_sensors
+[1.098s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/ament_index/resource_index/parent_prefix_path/pmb2_rgbd_sensors
+[1.111s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/environment/ament_prefix_path.sh
+[1.120s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/environment/ament_prefix_path.dsv
+[1.135s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/environment/path.sh
+[1.144s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/environment/path.dsv
+[1.154s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/local_setup.bash
+[1.165s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/local_setup.sh
+[1.176s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/local_setup.zsh
+[1.188s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/local_setup.dsv
+[1.199s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/package.dsv
+[1.210s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/ament_index/resource_index/packages/pmb2_rgbd_sensors
+[1.218s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/cmake/pmb2_rgbd_sensorsConfig.cmake
+[1.230s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/cmake/pmb2_rgbd_sensorsConfig-version.cmake
+[1.247s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_rgbd_sensors/share/pmb2_rgbd_sensors/package.xml
+[1.266s] Invoked command in '/home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/pmb2_rgbd_sensors

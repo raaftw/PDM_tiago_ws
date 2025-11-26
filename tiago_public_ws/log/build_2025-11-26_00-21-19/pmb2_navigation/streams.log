@@ -1,0 +1,41 @@
+[0.023s] Invoking command in '/home/raaf/tiago_public_ws/build/pmb2_navigation': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/pmb2_navigation/pmb2_navigation -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/pmb2_navigation
+[0.539s] -- The C compiler identification is GNU 11.4.0
+[0.540s] -- The CXX compiler identification is GNU 11.4.0
+[0.540s] -- Detecting C compiler ABI info
+[0.540s] -- Detecting C compiler ABI info - done
+[0.541s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.541s] -- Detecting C compile features
+[0.541s] -- Detecting C compile features - done
+[0.541s] -- Detecting CXX compiler ABI info
+[0.541s] -- Detecting CXX compiler ABI info - done
+[0.541s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.541s] -- Detecting CXX compile features
+[0.541s] -- Detecting CXX compile features - done
+[0.541s] -- Found ament_cmake_auto: 1.3.12 (/opt/ros/humble/share/ament_cmake_auto/cmake)
+[0.659s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.754s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.906s] -- Configuring done
+[0.910s] -- Generating done
+[0.913s] -- Build files have been written to: /home/raaf/tiago_public_ws/build/pmb2_navigation
+[0.923s] Invoked command in '/home/raaf/tiago_public_ws/build/pmb2_navigation' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/pmb2_navigation/pmb2_navigation -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/pmb2_navigation
+[0.925s] Invoking command in '/home/raaf/tiago_public_ws/build/pmb2_navigation': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/pmb2_navigation -- -j12 -l12
+[0.981s] Invoked command in '/home/raaf/tiago_public_ws/build/pmb2_navigation' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/pmb2_navigation -- -j12 -l12
+[0.983s] Invoking command in '/home/raaf/tiago_public_ws/build/pmb2_navigation': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/pmb2_navigation
+[1.021s] -- Install configuration: ""
+[1.021s] -- Execute custom install script
+[1.021s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/ament_index/resource_index/package_run_dependencies/pmb2_navigation
+[1.021s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/ament_index/resource_index/parent_prefix_path/pmb2_navigation
+[1.022s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/environment/ament_prefix_path.sh
+[1.028s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/environment/ament_prefix_path.dsv
+[1.039s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/environment/path.sh
+[1.051s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/environment/path.dsv
+[1.063s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/local_setup.bash
+[1.074s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/local_setup.sh
+[1.089s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/local_setup.zsh
+[1.096s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/local_setup.dsv
+[1.108s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/package.dsv
+[1.117s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/ament_index/resource_index/packages/pmb2_navigation
+[1.127s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/cmake/pmb2_navigationConfig.cmake
+[1.138s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/cmake/pmb2_navigationConfig-version.cmake
+[1.153s] -- Symlinking: /home/raaf/tiago_public_ws/install/pmb2_navigation/share/pmb2_navigation/package.xml
+[1.182s] Invoked command in '/home/raaf/tiago_public_ws/build/pmb2_navigation' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/home/raaf/tiago_public_ws/install/launch_pal:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pmb2_2dnav:/home/raaf/tiago_public_ws/install/pmb2_laser_sensors:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/build/launch_pal:/home/raaf/tiago_public_ws/install/launch_pal/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/pmb2_navigation

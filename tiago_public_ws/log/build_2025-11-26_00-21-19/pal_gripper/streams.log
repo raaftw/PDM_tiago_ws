@@ -1,0 +1,41 @@
+[0.017s] Invoking command in '/home/raaf/tiago_public_ws/build/pal_gripper': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/pal_gripper/pal_gripper -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/pal_gripper
+[0.076s] -- The C compiler identification is GNU 11.4.0
+[0.135s] -- The CXX compiler identification is GNU 11.4.0
+[0.142s] -- Detecting C compiler ABI info
+[0.207s] -- Detecting C compiler ABI info - done
+[0.215s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.215s] -- Detecting C compile features
+[0.216s] -- Detecting C compile features - done
+[0.219s] -- Detecting CXX compiler ABI info
+[0.293s] -- Detecting CXX compiler ABI info - done
+[0.301s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.302s] -- Detecting CXX compile features
+[0.302s] -- Detecting CXX compile features - done
+[0.305s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.463s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.540s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.651s] -- Configuring done
+[0.654s] -- Generating done
+[0.655s] -- Build files have been written to: /home/raaf/tiago_public_ws/build/pal_gripper
+[0.659s] Invoked command in '/home/raaf/tiago_public_ws/build/pal_gripper' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/pal_gripper/pal_gripper -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/pal_gripper
+[0.661s] Invoking command in '/home/raaf/tiago_public_ws/build/pal_gripper': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/pal_gripper -- -j12 -l12
+[0.696s] Invoked command in '/home/raaf/tiago_public_ws/build/pal_gripper' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/pal_gripper -- -j12 -l12
+[0.698s] Invoking command in '/home/raaf/tiago_public_ws/build/pal_gripper': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/pal_gripper
+[0.704s] -- Install configuration: ""
+[0.705s] -- Execute custom install script
+[0.705s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/ament_index/resource_index/package_run_dependencies/pal_gripper
+[0.713s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/ament_index/resource_index/parent_prefix_path/pal_gripper
+[0.722s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/environment/ament_prefix_path.sh
+[0.730s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/environment/ament_prefix_path.dsv
+[0.738s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/environment/path.sh
+[0.745s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/environment/path.dsv
+[0.754s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/local_setup.bash
+[0.763s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/local_setup.sh
+[0.771s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/local_setup.zsh
+[0.778s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/local_setup.dsv
+[0.787s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/package.dsv
+[0.794s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/ament_index/resource_index/packages/pal_gripper
+[0.801s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/cmake/pal_gripperConfig.cmake
+[0.810s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/cmake/pal_gripperConfig-version.cmake
+[0.820s] -- Symlinking: /home/raaf/tiago_public_ws/install/pal_gripper/share/pal_gripper/package.xml
+[0.840s] Invoked command in '/home/raaf/tiago_public_ws/build/pal_gripper' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/pal_gripper_description:/home/raaf/tiago_public_ws/install/urdf_test:/home/raaf/tiago_public_ws/install/pal_urdf_utils:/home/raaf/tiago_public_ws/install/pal_gripper_controller_configuration:/opt/ros/humble PYTHONPATH=/home/raaf/tiago_public_ws/install/urdf_test/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/pal_gripper

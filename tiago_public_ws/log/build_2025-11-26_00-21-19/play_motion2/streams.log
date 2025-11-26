@@ -1,0 +1,158 @@
+[0.005s] Invoking command in '/home/raaf/tiago_public_ws/build/play_motion2': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:/opt/ros/humble LD_LIBRARY_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/play_motion2/play_motion2 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/play_motion2
+[0.042s] -- The C compiler identification is GNU 11.4.0
+[0.081s] -- The CXX compiler identification is GNU 11.4.0
+[0.086s] -- Detecting C compiler ABI info
+[0.132s] -- Detecting C compiler ABI info - done
+[0.138s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.138s] -- Detecting C compile features
+[0.138s] -- Detecting C compile features - done
+[0.140s] -- Detecting CXX compiler ABI info
+[0.197s] -- Detecting CXX compiler ABI info - done
+[0.203s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.203s] -- Detecting CXX compile features
+[0.204s] -- Detecting CXX compile features - done
+[0.206s] -- Found ament_cmake_auto: 1.3.12 (/opt/ros/humble/share/ament_cmake_auto/cmake)
+[0.323s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[0.369s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[0.461s] -- Found rosidl_generator_c: 3.1.7 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[0.465s] -- Found rosidl_adapter: 3.1.7 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.472s] -- Found rosidl_generator_cpp: 3.1.7 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[0.481s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.494s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.777s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: date_time filesystem program_options system thread 
+[0.861s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: chrono date_time filesystem iostreams program_options regex serialization system thread 
+[0.893s] -- Found parameter_traits: 0.5.0 (/opt/ros/humble/share/parameter_traits/cmake)
+[0.924s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[0.926s] -- Found rmw_fastrtps_cpp: 6.2.9 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[0.984s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  
+[1.000s] -- Found FastRTPS: /opt/ros/humble/include  
+[1.028s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[1.035s] -- Found Threads: TRUE  
+[1.071s] -- Found rclcpp_lifecycle: 16.0.16 (/opt/ros/humble/share/rclcpp_lifecycle/cmake)
+[1.082s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: filesystem 
+[1.138s] -- library: /usr/lib/x86_64-linux-gnu/libcurl.so
+[1.164s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[1.164s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[1.274s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: system filesystem date_time program_options thread chrono 
+[1.299s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: thread system filesystem regex date_time program_options 
+[1.318s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.74.0/BoostConfig.cmake (found version "1.74.0") found components: system filesystem date_time program_options thread 
+[1.449s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[1.465s] -- Found PythonInterp: /usr/bin/python3 (found suitable version "3.10.12", minimum required is "3.6") 
+[1.469s] -- Found PythonLibs: /usr/lib/x86_64-linux-gnu/libpython3.10.so (found suitable version "3.10.12", minimum required is "3.5") 
+[1.469s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[1.469s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[1.469s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[1.485s] -- Found PythonExtra: .so  
+[1.507s] -- Found gtest sources under '/opt/ros/humble/src/gtest_vendor': C++ tests using 'Google Test' will be built
+[1.759s] -- Added test 'copyright' to check source files copyright and LICENSE
+[1.760s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[1.761s] -- Configured cppcheck include dirs: /home/raaf/tiago_public_ws/src/play_motion2/play_motion2/include
+[1.761s] -- Configured cppcheck exclude dirs and/or files: 
+[1.763s] -- Added test 'cpplint' to check C / C++ code against the Google style
+[1.763s] -- Configured cpplint exclude dirs and/or files: 
+[1.763s] -- Added test 'flake8' to check Python code syntax and style conventions
+[1.764s] -- Added test 'lint_cmake' to check CMake code style
+[1.764s] -- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+[1.766s] -- Added test 'uncrustify' to check C / C++ code style
+[1.766s] -- Configured uncrustify additional arguments: 
+[1.767s] -- Added test 'xmllint' to check XML markup files
+[1.769s] -- Configuring done
+[1.834s] -- Generating done
+[1.857s] -- Build files have been written to: /home/raaf/tiago_public_ws/build/play_motion2
+[1.870s] Invoked command in '/home/raaf/tiago_public_ws/build/play_motion2' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:/opt/ros/humble LD_LIBRARY_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake /home/raaf/tiago_public_ws/src/play_motion2/play_motion2 -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/raaf/tiago_public_ws/install/play_motion2
+[1.871s] Invoking command in '/home/raaf/tiago_public_ws/build/play_motion2': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:/opt/ros/humble LD_LIBRARY_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/play_motion2 -- -j12 -l12
+[1.914s] [  4%] [32mBuilding CXX object CMakeFiles/play_motion2_node.dir/src/play_motion2/play_motion2_executor.cpp.o[0m
+[1.914s] [  8%] [32mBuilding CXX object CMakeFiles/play_motion2_node.dir/src/utils/motion_loader.cpp.o[0m
+[1.915s] [ 12%] [32mBuilding CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o[0m
+[1.916s] [ 16%] [32mBuilding CXX object CMakeFiles/play_motion2_node.dir/src/play_motion2_main.cpp.o[0m
+[1.916s] [ 24%] [32mBuilding CXX object CMakeFiles/client.dir/src/play_motion2/client.cpp.o[0m
+[1.916s] [ 24%] [32mBuilding CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o[0m
+[1.916s] [ 28%] [32mBuilding CXX object CMakeFiles/play_motion2_node.dir/src/play_motion2/play_motion2_mgr.cpp.o[0m
+[1.916s] [ 32%] [32mBuilding CXX object CMakeFiles/play_motion2_node.dir/src/utils/motion_planner.cpp.o[0m
+[1.917s] [ 36%] [34m[1mRunning `/opt/ros/humble/bin/generate_parameter_library_cpp /home/raaf/tiago_public_ws/build/play_motion2/include/play_motion2/passthrough_controller_parameters.hpp /home/raaf/tiago_public_ws/src/play_motion2/play_motion2/test/controllers/src/passthrough_controller_parameters.yaml `[0m
+[1.926s] [ 36%] Built target ament_cmake_python_symlink_play_motion2
+[2.165s] [ 40%] [34m[1mCreating deprecated header file /home/raaf/tiago_public_ws/build/play_motion2/include/passthrough_controller_parameters.hpp[0m
+[2.183s] [ 40%] Built target passthrough_controller_parameters
+[2.205s] [ 44%] [32mBuilding CXX object CMakeFiles/passthrough_controller.dir/test/controllers/src/passthrough_controller.cpp.o[0m
+[2.297s] running egg_info
+[2.298s] creating play_motion2.egg-info
+[2.299s] writing play_motion2.egg-info/PKG-INFO
+[2.299s] writing dependency_links to play_motion2.egg-info/dependency_links.txt
+[2.299s] writing top-level names to play_motion2.egg-info/top_level.txt
+[2.299s] writing manifest file 'play_motion2.egg-info/SOURCES.txt'
+[2.303s] reading manifest file 'play_motion2.egg-info/SOURCES.txt'
+[2.303s] writing manifest file 'play_motion2.egg-info/SOURCES.txt'
+[2.344s] [ 44%] Built target ament_cmake_python_build_play_motion2_egg
+[3.304s] [ 48%] [32m[1mLinking CXX static library libgtest_main.a[0m
+[3.348s] [ 48%] Built target gtest_main
+[6.673s] [ 52%] [32m[1mLinking CXX static library libgtest.a[0m
+[6.743s] [ 52%] Built target gtest
+[6.767s] [ 56%] [32mBuilding CXX object CMakeFiles/play_motion2_node_test.dir/test/play_motion2_node_test.cpp.o[0m
+[12.086s] [ 60%] [32m[1mLinking CXX shared library libclient.so[0m
+[13.397s] [ 60%] Built target client
+[13.422s] [ 64%] [32mBuilding CXX object CMakeFiles/rrbot_system.dir/test/rrbot/rrbot_system.cpp.o[0m
+[13.425s] [ 68%] [32mBuilding CXX object CMakeFiles/run_motion.dir/src/run_motion.cpp.o[0m
+[14.438s] [ 72%] [32m[1mLinking CXX shared library libpassthrough_controller.so[0m
+[14.993s] [ 72%] Built target passthrough_controller
+[15.384s] [ 76%] [32m[1mLinking CXX shared library librrbot_system.so[0m
+[16.336s] [ 80%] [32m[1mLinking CXX executable run_motion[0m
+[16.453s] [ 80%] Built target rrbot_system
+[16.474s] [ 88%] [32mBuilding CXX object CMakeFiles/motion_loader_test.dir/src/utils/motion_loader.cpp.o[0m
+[16.474s] [ 88%] [32mBuilding CXX object CMakeFiles/motion_loader_test.dir/test/motion_loader_test.cpp.o[0m
+[16.888s] [ 88%] Built target run_motion
+[20.489s] [ 92%] [32m[1mLinking CXX executable motion_loader_test[0m
+[20.987s] [ 92%] Built target motion_loader_test
+[22.821s] [ 96%] [32m[1mLinking CXX executable play_motion2_node_test[0m
+[23.527s] [ 96%] Built target play_motion2_node_test
+[25.095s] [100%] [32m[1mLinking CXX executable play_motion2_node[0m
+[27.426s] [100%] Built target play_motion2_node
+[27.435s] Invoked command in '/home/raaf/tiago_public_ws/build/play_motion2' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:/opt/ros/humble LD_LIBRARY_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/play_motion2 -- -j12 -l12
+[27.437s] Invoking command in '/home/raaf/tiago_public_ws/build/play_motion2': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:/opt/ros/humble LD_LIBRARY_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/play_motion2
+[27.445s] -- Install configuration: ""
+[27.445s] -- Execute custom install script
+[27.446s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/pythonpath.sh
+[27.452s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/pythonpath.dsv
+[27.461s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/local/lib/python3.10/dist-packages/play_motion2-1.8.2-py3.10.egg-info/PKG-INFO
+[27.468s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/local/lib/python3.10/dist-packages/play_motion2-1.8.2-py3.10.egg-info/SOURCES.txt
+[27.476s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/local/lib/python3.10/dist-packages/play_motion2-1.8.2-py3.10.egg-info/dependency_links.txt
+[27.485s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/local/lib/python3.10/dist-packages/play_motion2-1.8.2-py3.10.egg-info/top_level.txt
+[27.494s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/local/lib/python3.10/dist-packages/play_motion2/__init__.py
+[27.501s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/test/rrbot/rrbot_system.xml
+[27.509s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/include/play_motion2/passthrough_controller_parameters.hpp
+[27.515s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/test/controllers/passthrough_controller.xml
+[27.522s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/lib/libpassthrough_controller.so
+[27.531s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/lib/play_motion2/play_motion2_node_test
+[27.538s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/include/play_motion2/play_motion2/client.hpp
+[27.546s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/include/play_motion2/play_motion2/motion_loader.hpp
+[27.554s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/include/play_motion2/play_motion2/types.hpp
+[27.565s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/library_path.sh
+[27.573s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/library_path.dsv
+[27.580s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/lib/libclient.so
+[27.587s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/lib/librrbot_system.so
+[27.595s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/lib/play_motion2/play_motion2_node
+[27.602s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/lib/play_motion2/run_motion
+[27.611s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/config/motion_planner_config.yaml
+[27.618s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/launch/play_motion2.launch.py
+[27.627s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/ament_index/resource_index/package_run_dependencies/play_motion2
+[27.634s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/ament_index/resource_index/parent_prefix_path/play_motion2
+[27.641s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/ament_prefix_path.sh
+[27.648s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/ament_prefix_path.dsv
+[27.656s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/path.sh
+[27.664s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/environment/path.dsv
+[27.670s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/local_setup.bash
+[27.679s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/local_setup.sh
+[27.686s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/local_setup.zsh
+[27.693s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/local_setup.dsv
+[27.700s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/package.dsv
+[27.708s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/ament_index/resource_index/packages/play_motion2
+[27.715s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/ament_index/resource_index/hardware_interface__pluginlib__plugin/play_motion2
+[27.722s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/ament_index/resource_index/controller_interface__pluginlib__plugin/play_motion2
+[27.730s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/cmake/ament_cmake_export_dependencies-extras.cmake
+[27.737s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/cmake/ament_cmake_export_include_directories-extras.cmake
+[27.745s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/cmake/ament_cmake_export_libraries-extras.cmake
+[27.751s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/cmake/play_motion2Config.cmake
+[27.759s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/cmake/play_motion2Config-version.cmake
+[27.766s] -- Symlinking: /home/raaf/tiago_public_ws/install/play_motion2/share/play_motion2/package.xml
+[27.807s] Listing '/home/raaf/tiago_public_ws/install/play_motion2/local/lib/python3.10/dist-packages/play_motion2'...
+[27.807s] Compiling '/home/raaf/tiago_public_ws/install/play_motion2/local/lib/python3.10/dist-packages/play_motion2/__init__.py'...
+[27.813s] Invoked command in '/home/raaf/tiago_public_ws/build/play_motion2' returned '0': AMENT_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs:/opt/ros/humble LD_LIBRARY_PATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/raaf/tiago_public_ws/install/play_motion2_msgs/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/play_motion2

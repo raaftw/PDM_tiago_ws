@@ -1,0 +1,21 @@
+[0.422s] Invoking command in '/home/raaf/tiago_public_ws/build/tiago_rgbd_sensors': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/raaf/tiago_public_ws/install/play_motion2_cli:/home/raaf/tiago_public_ws/install/launch_pal:/opt/ros/humble /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/tiago_rgbd_sensors -- -j12 -l12
+[0.553s] Invoked command in '/home/raaf/tiago_public_ws/build/tiago_rgbd_sensors' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/raaf/tiago_public_ws/install/play_motion2_cli:/home/raaf/tiago_public_ws/install/launch_pal:/opt/ros/humble /usr/bin/cmake --build /home/raaf/tiago_public_ws/build/tiago_rgbd_sensors -- -j12 -l12
+[0.557s] Invoking command in '/home/raaf/tiago_public_ws/build/tiago_rgbd_sensors': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/raaf/tiago_public_ws/install/play_motion2_cli:/home/raaf/tiago_public_ws/install/launch_pal:/opt/ros/humble /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/tiago_rgbd_sensors
+[0.564s] -- Install configuration: ""
+[0.564s] -- Execute custom install script
+[0.564s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/ament_index/resource_index/package_run_dependencies/tiago_rgbd_sensors
+[0.564s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/ament_index/resource_index/parent_prefix_path/tiago_rgbd_sensors
+[0.564s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/environment/ament_prefix_path.sh
+[0.565s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/environment/ament_prefix_path.dsv
+[0.565s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/environment/path.sh
+[0.565s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/environment/path.dsv
+[0.565s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/local_setup.bash
+[0.565s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/local_setup.sh
+[0.565s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/local_setup.zsh
+[0.565s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/local_setup.dsv
+[0.565s] -- Symlinking: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/package.dsv
+[0.566s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/ament_index/resource_index/packages/tiago_rgbd_sensors
+[0.566s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/cmake/tiago_rgbd_sensorsConfig.cmake
+[0.566s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/cmake/tiago_rgbd_sensorsConfig-version.cmake
+[0.566s] -- Up-to-date symlink: /home/raaf/tiago_public_ws/install/tiago_rgbd_sensors/share/tiago_rgbd_sensors/package.xml
+[0.740s] Invoked command in '/home/raaf/tiago_public_ws/build/tiago_rgbd_sensors' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/raaf/tiago_public_ws/install/play_motion2_cli:/home/raaf/tiago_public_ws/install/launch_pal:/opt/ros/humble /usr/bin/cmake --install /home/raaf/tiago_public_ws/build/tiago_rgbd_sensors
