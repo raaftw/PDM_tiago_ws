@@ -1,1 +1,0 @@
-/home/raaf/tiago_public_ws/build/urdf_test/ament_cmake_environment_hooks/local_setup.sh

@@ -1,1 +1,0 @@
-/home/raaf/tiago_public_ws/src/urdf_test/scripts/test_urdf.py

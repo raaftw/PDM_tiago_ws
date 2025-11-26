@@ -1,1 +1,0 @@
-/home/raaf/tiago_public_ws/src/pmb2_navigation/pmb2_2dnav/launch/navigation.launch.py

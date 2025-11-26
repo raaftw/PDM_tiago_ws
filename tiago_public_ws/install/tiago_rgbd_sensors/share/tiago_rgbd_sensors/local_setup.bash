@@ -1,1 +1,0 @@
-/home/raaf/tiago_public_ws/build/tiago_rgbd_sensors/ament_cmake_environment_hooks/local_setup.bash

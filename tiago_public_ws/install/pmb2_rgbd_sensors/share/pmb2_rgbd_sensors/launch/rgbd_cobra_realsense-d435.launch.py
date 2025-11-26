@@ -1,1 +1,0 @@
-/home/raaf/tiago_public_ws/src/pmb2_navigation/pmb2_rgbd_sensors/launch/rgbd_cobra_realsense-d435.launch.py

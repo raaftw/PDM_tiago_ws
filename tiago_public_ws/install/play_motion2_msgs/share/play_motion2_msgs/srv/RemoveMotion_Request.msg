@@ -1,1 +1,0 @@
-/home/raaf/tiago_public_ws/build/play_motion2_msgs/rosidl_cmake/srv/RemoveMotion_Request.msg
