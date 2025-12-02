@@ -1,0 +1,14 @@
+running develop
+running egg_info
+writing PDM_tiago_assignment.egg-info/PKG-INFO
+writing dependency_links to PDM_tiago_assignment.egg-info/dependency_links.txt
+writing entry points to PDM_tiago_assignment.egg-info/entry_points.txt
+writing requirements to PDM_tiago_assignment.egg-info/requires.txt
+writing top-level names to PDM_tiago_assignment.egg-info/top_level.txt
+reading manifest file 'PDM_tiago_assignment.egg-info/SOURCES.txt'
+writing manifest file 'PDM_tiago_assignment.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/lib/python3.10/site-packages/PDM-tiago-assignment.egg-link (link to .)
+
+Installed /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment
+running symlink_data

@@ -1,0 +1,28 @@
+running develop
+running egg_info
+creating PDM_tiago_assignment.egg-info
+writing PDM_tiago_assignment.egg-info/PKG-INFO
+writing dependency_links to PDM_tiago_assignment.egg-info/dependency_links.txt
+writing entry points to PDM_tiago_assignment.egg-info/entry_points.txt
+writing requirements to PDM_tiago_assignment.egg-info/requires.txt
+writing top-level names to PDM_tiago_assignment.egg-info/top_level.txt
+writing manifest file 'PDM_tiago_assignment.egg-info/SOURCES.txt'
+reading manifest file 'PDM_tiago_assignment.egg-info/SOURCES.txt'
+writing manifest file 'PDM_tiago_assignment.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/lib/python3.10/site-packages/PDM-tiago-assignment.egg-link (link to .)
+
+Installed /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment
+running symlink_data
+creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/ament_index
+creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/ament_index/resource_index
+creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/ament_index/resource_index/packages
+symbolically linking /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/resource/PDM_tiago_assignment -> /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/ament_index/resource_index/packages
+symbolically linking /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/package.xml -> /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment
+creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment/launch
+symbolically linking /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/launch/cafe.launch.py -> /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment/launch
+creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment/worlds
+symbolically linking /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/worlds/cafe_table.world -> /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment/worlds
+symbolically linking /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/worlds/cafe_dynamic.world -> /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment/worlds
+symbolically linking /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/worlds/cafe.world -> /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment/worlds
+symbolically linking /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/worlds/restaurant.world -> /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/share/PDM_tiago_assignment/worlds

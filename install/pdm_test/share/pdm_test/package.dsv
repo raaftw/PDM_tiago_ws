@@ -1,0 +1,9 @@
+source;share/pdm_test/hook/pythonpath.ps1
+source;share/pdm_test/hook/pythonpath.dsv
+source;share/pdm_test/hook/pythonpath.sh
+source;share/pdm_test/hook/ament_prefix_path.ps1
+source;share/pdm_test/hook/ament_prefix_path.dsv
+source;share/pdm_test/hook/ament_prefix_path.sh
+source;../../build/pdm_test/share/pdm_test/hook/pythonpath_develop.ps1
+source;../../build/pdm_test/share/pdm_test/hook/pythonpath_develop.dsv
+source;../../build/pdm_test/share/pdm_test/hook/pythonpath_develop.sh

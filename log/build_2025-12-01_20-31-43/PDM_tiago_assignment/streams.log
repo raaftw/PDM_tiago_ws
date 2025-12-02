@@ -1,0 +1,17 @@
+[1.297s] Invoking command in '/home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment': PYTHONPATH=/home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/build --no-deps symlink_data
+[1.676s] running develop
+[1.932s] running egg_info
+[1.932s] writing PDM_tiago_assignment.egg-info/PKG-INFO
+[1.932s] writing dependency_links to PDM_tiago_assignment.egg-info/dependency_links.txt
+[1.933s] writing entry points to PDM_tiago_assignment.egg-info/entry_points.txt
+[1.933s] writing requirements to PDM_tiago_assignment.egg-info/requires.txt
+[1.933s] writing top-level names to PDM_tiago_assignment.egg-info/top_level.txt
+[1.936s] reading manifest file 'PDM_tiago_assignment.egg-info/SOURCES.txt'
+[1.938s] writing manifest file 'PDM_tiago_assignment.egg-info/SOURCES.txt'
+[1.940s] running build_ext
+[1.941s] Creating /home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/lib/python3.10/site-packages/PDM-tiago-assignment.egg-link (link to .)
+[1.942s] 
+[1.942s] Installed /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment
+[1.942s] running symlink_data
+[1.943s] error: can't copy '/home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/worlds/restaurant.world': doesn't exist or not a regular file
+[1.987s] Invoked command in '/home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment' returned '1': PYTHONPATH=/home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/PDM_tiago_ws/install/PDM_tiago_assignment/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/PDM_tiago_ws/build/PDM_tiago_assignment/build --no-deps symlink_data

@@ -1,0 +1,28 @@
+# -------------------------
+# ROS 2 / Colcon workspace
+# -------------------------
+
+build/
+install/
+log/
+
+# colcon metadata
+.colcon/
+.colcon_install_layout
+.colcon_release
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE files
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python packaging noise
+*.egg-info/
+*.egg
