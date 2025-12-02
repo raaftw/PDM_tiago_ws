@@ -1,68 +1,67 @@
-# Planning-and-decision-making-RO47005
-Mobile manipulator motion planning and decision making.
+# Planning-and-decision-making-RO47005  
+**Mobile manipulator motion planning and decision making.**
 
-# TIAGo Simulation Environment — Custom Cafe Worlds
+This workspace contains the ROS 2 package **`pdm_test`**, which provides custom Gazebo worlds and a launch file to run the **TIAGo** robot from PAL Robotics in a variety of restaurant/café environments.
 
-This repository contains a ROS 2 package **`pdm_test`** that provides multiple Gazebo worlds for use with **PAL Robotics’ TIAGo public simulation**.  
-It allows launching TIAGo inside different environments using a simple launch argument.
-
-Included worlds:
+The included worlds are:
 
 - `cafe.world`
 - `cafe_table.world`
 - `cade_dynamic.world`
 
-You can add more worlds easily (see the bottom section).
+You may add more worlds; instructions are included at the bottom of this README.
 
 ---
 
-# 1. Prerequisites
+# 1. Requirements
 
-Before using this package, you need:
+Before using this workspace, the machine must already have:
 
-- **ROS 2 Humble** installed
-- PAL Robotics’ **TIAGo public simulation workspace**  
-  (referred to as: `tiago_public_ws`)  
-  This provides `tiago_gazebo` and all associated robot simulation packages.
+1. **ROS 2 Humble**
+2. **PAL Robotics' public TIAGo simulation workspace**  
+   cloned and built here:
 
-This README explains how to integrate **this package** with that simulation.
+   ```
+   ~/tiago_public_ws
+   ```
+
+This repository acts as an **overlay workspace** on top of `tiago_public_ws`.
 
 ---
 
-# 2. Clone this repository (assignment workspace)
+# 2. Cloning this workspace
 
-The workspace for this assignment is assumed to be:
-
-```
-~/PDM_tiago_ws
-```
-
-Clone your repo into the `src/` subdirectory:
+clone the repository:
 
 ```bash
-mkdir -p ~/PDM_tiago_ws/src
-cd ~/PDM_tiago_ws/src
-git clone https://github.com/YOUR_USERNAME/Planning-and-decision-making-RO47005.git
+cd ~
+git clone git@github.com:raaftw/PDM_tiago_ws.git
 ```
 
-Make sure the folder structure looks like:
 
+# 3. Install dependencies (first-time setup)
+
+Make sure the TIAGo simulation workspace is sourced:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/tiago_public_ws/install/setup.bash
 ```
-~/PDM_tiago_ws/src/pdm_test
-```
 
----
-
-# 3. Build the overlay workspace
-
-From inside your assignment workspace:
+Then build this overlay workspace:
 
 ```bash
 cd ~/PDM_tiago_ws
 colcon build --symlink-install
 ```
 
-Every time you open a new terminal, source the workspaces **in this order**:
+Source the workspace:
+
+```bash
+source install/setup.bash
+```
+
+You will need to source these three lines in any new terminal:
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -70,14 +69,12 @@ source ~/tiago_public_ws/install/setup.bash
 source ~/PDM_tiago_ws/install/setup.bash
 ```
 
-(Add the last two lines to `~/.bashrc` if you want them always active.)
-
 ---
 
-# 4. Copy the custom worlds into TIAGo’s simulation (required once)
+# 4. Copy custom worlds into TIAGo’s world directory (required once)
 
-PAL’s simulator loads worlds using a **name** (world_name:=…), not file paths.  
-Therefore, your custom worlds must also exist inside the TIAGo simulation folder:
+PAL’s TIAGo simulation loads worlds using a **name** (`world_name:=…`), not a file path.  
+Therefore, the `.world` files must also exist in the TIAGo world directory:
 
 ```bash
 cd ~/tiago_public_ws/src/pal_gazebo_worlds/worlds
@@ -87,7 +84,7 @@ cp ~/PDM_tiago_ws/src/pdm_test/worlds/cafe_table.world .
 cp ~/PDM_tiago_ws/src/pdm_test/worlds/cade_dynamic.world .
 ```
 
-Then rebuild TIAGo’s workspace once:
+Rebuild TIAGo’s workspace:
 
 ```bash
 cd ~/tiago_public_ws
@@ -95,7 +92,7 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-Now TIAGo will recognise:
+Now TIAGo can load:
 
 ```
 world_name:=cafe
@@ -107,15 +104,15 @@ world_name:=cade_dynamic
 
 # 5. Running the simulation
 
-Launch TIAGo using the `pdm_test` launch file.
+Use the launch file in `pdm_test`:
 
-### Default world (cafe.world)
+### Default world (cafe)
 
 ```bash
 ros2 launch pdm_test cafe.launch.py
 ```
 
-### Other worlds
+### Other custom worlds
 
 ```bash
 ros2 launch pdm_test cafe.launch.py world_name:=cafe_table
@@ -125,103 +122,101 @@ ros2 launch pdm_test cafe.launch.py world_name:=cafe_table
 ros2 launch pdm_test cafe.launch.py world_name:=cade_dynamic
 ```
 
-### PAL default world (pal_office)
+### TIAGo’s default world
 
 ```bash
 ros2 launch pdm_test cafe.launch.py world_name:=pal_office
 ```
 
-Internally, this launch file:
-
-- Adds `pdm_test/worlds` to the `GAZEBO_RESOURCE_PATH`
-- Calls PAL’s `tiago_gazebo.launch.py`
-- Passes the selected world via `world_name:=...`
-- Ensures public simulation mode is enabled
-
 ---
 
-# 6. Directory overview (where to work)
-
-Most edits for this assignment happen here:
+# 6. Workspace structure
 
 ```
-~/PDM_tiago_ws/src/pdm_test
+PDM_tiago_ws/
+├── .gitignore
+├── README.md
+└── src/
+    └── pdm_test/
+        ├── launch/
+        │   └── cafe.launch.py
+        ├── worlds/
+        │   ├── cafe.world
+        │   ├── cafe_table.world
+        │   └── cade_dynamic.world
+        ├── package.xml
+        ├── setup.py
+        ├── setup.cfg
+        └── pdm_test/
+            └── __init__.py
 ```
 
-Build your workspace here:
+**NOTE:**  
+The following directories are *local build artefacts* and correctly ignored by `.gitignore`:
 
-```
-~/PDM_tiago_ws
-```
+- `build/`
+- `install/`
+- `log/`
 
-TIAGo simulation code (DO NOT modify unless needed):
-
-```
-~/tiago_public_ws
-```
+These must not be pushed to GitHub.
 
 ---
 
 # 7. Adding new worlds
 
-To add a new world (e.g. `new_scene.world`), follow these steps:
+To add a new world (e.g. `cafe.world`):
 
-### 1 — Add to your package
-
-Place the `.world` file into:
-
-```
-~/PDM_tiago_ws/src/pdm_test/worlds/
-```
-
-Example:
+### 1. Add it to this workspace:
 
 ```bash
-cp new_scene.world ~/PDM_tiago_ws/src/pdm_test/worlds/
+cp cafe.world ~/PDM_tiago_ws/src/pdm_test/worlds/
 ```
 
-### 2 — Copy into TIAGo’s world directory
-
-Required so that TIAGo can load it via `world_name:=new_scene`:
+### 2. Also add it to TIAGo’s world directory:
 
 ```bash
-cp ~/PDM_tiago_ws/src/pdm_test/worlds/new_scene.world \
+cp ~/PDM_tiago_ws/src/pdm_test/worlds/cafe.world \
    ~/tiago_public_ws/src/pal_gazebo_worlds/worlds/
 ```
 
-### 3 — Rebuild TIAGo’s workspace once
+### 3. Rebuild TIAGo’s workspace:
 
 ```bash
 cd ~/tiago_public_ws
 colcon build --symlink-install
 ```
 
-### 4 — Launch it
+### 4. Launch:
 
 ```bash
-ros2 launch pdm_test cafe.launch.py world_name:=new_scene
+ros2 launch pdm_test cafe.launch.py world_name:=cafe
 ```
 
 As long as the file is named:
 
 ```
-new_scene.world
+cafe.world
 ```
 
-you may run:
+it can be launched via:
 
 ```
-world_name:=new_scene
+world_name:=cafe
 ```
 
 ---
 
-# 8. Notes
+# 8. Troubleshooting
 
-- Worlds kept in this Git repo ensure reproducibility.
-- Worlds copied into TIAGo’s simulation package enable TIAGo’s selector (`world_name:=...`).
-- This README assumes ROS 2 Humble and the public TIAGo simulation from PAL Robotics.
+### TIAGo spawns into an empty world
+Most likely cause:
 
----
+- The `.world` file was not copied into  
+  `~/tiago_public_ws/src/pal_gazebo_worlds/worlds`
 
-If you need a developer-focused README (navigation, MoveIt, mapping, planning), ask and it can be added here.
+### `ros2 launch pdm_test cafe.launch.py` cannot find TIAGo launch files
+Make sure you sourced the TIAGo workspace:
+
+```bash
+source ~/tiago_public_ws/install/setup.bash
+```

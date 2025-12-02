@@ -1,0 +1,29 @@
+[1.279s] Invoking command in '/home/raaf/PDM_tiago_ws/build/pdm_test': PYTHONPATH=/home/raaf/PDM_tiago_ws/build/pdm_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/PDM_tiago_ws/install/pdm_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/PDM_tiago_ws/build/pdm_test/build --no-deps symlink_data
+[1.662s] running develop
+[1.917s] running egg_info
+[1.917s] creating pdm_test.egg-info
+[1.918s] writing pdm_test.egg-info/PKG-INFO
+[1.918s] writing dependency_links to pdm_test.egg-info/dependency_links.txt
+[1.918s] writing entry points to pdm_test.egg-info/entry_points.txt
+[1.918s] writing requirements to pdm_test.egg-info/requires.txt
+[1.919s] writing top-level names to pdm_test.egg-info/top_level.txt
+[1.919s] writing manifest file 'pdm_test.egg-info/SOURCES.txt'
+[1.919s] reading manifest file 'pdm_test.egg-info/SOURCES.txt'
+[1.920s] writing manifest file 'pdm_test.egg-info/SOURCES.txt'
+[1.922s] running build_ext
+[1.923s] Creating /home/raaf/PDM_tiago_ws/install/pdm_test/lib/python3.10/site-packages/pdm-test.egg-link (link to .)
+[1.924s] 
+[1.924s] Installed /home/raaf/PDM_tiago_ws/build/pdm_test
+[1.924s] running symlink_data
+[1.924s] creating /home/raaf/PDM_tiago_ws/install/pdm_test/share/ament_index
+[1.925s] creating /home/raaf/PDM_tiago_ws/install/pdm_test/share/ament_index/resource_index
+[1.925s] creating /home/raaf/PDM_tiago_ws/install/pdm_test/share/ament_index/resource_index/packages
+[1.925s] symbolically linking /home/raaf/PDM_tiago_ws/build/pdm_test/resource/pdm_test -> /home/raaf/PDM_tiago_ws/install/pdm_test/share/ament_index/resource_index/packages
+[1.925s] symbolically linking /home/raaf/PDM_tiago_ws/build/pdm_test/package.xml -> /home/raaf/PDM_tiago_ws/install/pdm_test/share/pdm_test
+[1.925s] creating /home/raaf/PDM_tiago_ws/install/pdm_test/share/pdm_test/worlds
+[1.925s] symbolically linking /home/raaf/PDM_tiago_ws/build/pdm_test/worlds/cafe_table.world -> /home/raaf/PDM_tiago_ws/install/pdm_test/share/pdm_test/worlds
+[1.925s] symbolically linking /home/raaf/PDM_tiago_ws/build/pdm_test/worlds/cafe_dynamic.world -> /home/raaf/PDM_tiago_ws/install/pdm_test/share/pdm_test/worlds
+[1.925s] symbolically linking /home/raaf/PDM_tiago_ws/build/pdm_test/worlds/cafe.world -> /home/raaf/PDM_tiago_ws/install/pdm_test/share/pdm_test/worlds
+[1.925s] creating /home/raaf/PDM_tiago_ws/install/pdm_test/share/pdm_test/launch
+[1.925s] symbolically linking /home/raaf/PDM_tiago_ws/build/pdm_test/launch/cafe.launch.py -> /home/raaf/PDM_tiago_ws/install/pdm_test/share/pdm_test/launch
+[1.956s] Invoked command in '/home/raaf/PDM_tiago_ws/build/pdm_test' returned '0': PYTHONPATH=/home/raaf/PDM_tiago_ws/build/pdm_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/PDM_tiago_ws/install/pdm_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/PDM_tiago_ws/build/pdm_test/build --no-deps symlink_data

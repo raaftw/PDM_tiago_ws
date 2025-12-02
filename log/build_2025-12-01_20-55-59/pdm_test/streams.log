@@ -1,0 +1,16 @@
+[0.909s] Invoking command in '/home/raaf/PDM_tiago_ws/build/pdm_test': PYTHONPATH=/home/raaf/PDM_tiago_ws/build/pdm_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/PDM_tiago_ws/install/pdm_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/PDM_tiago_ws/build/pdm_test/build --no-deps symlink_data
+[1.340s] running develop
+[1.602s] running egg_info
+[1.602s] writing pdm_test.egg-info/PKG-INFO
+[1.602s] writing dependency_links to pdm_test.egg-info/dependency_links.txt
+[1.603s] writing entry points to pdm_test.egg-info/entry_points.txt
+[1.603s] writing requirements to pdm_test.egg-info/requires.txt
+[1.603s] writing top-level names to pdm_test.egg-info/top_level.txt
+[1.604s] reading manifest file 'pdm_test.egg-info/SOURCES.txt'
+[1.605s] writing manifest file 'pdm_test.egg-info/SOURCES.txt'
+[1.607s] running build_ext
+[1.608s] Creating /home/raaf/PDM_tiago_ws/install/pdm_test/lib/python3.10/site-packages/pdm-test.egg-link (link to .)
+[1.609s] 
+[1.609s] Installed /home/raaf/PDM_tiago_ws/build/pdm_test
+[1.609s] running symlink_data
+[1.641s] Invoked command in '/home/raaf/PDM_tiago_ws/build/pdm_test' returned '0': PYTHONPATH=/home/raaf/PDM_tiago_ws/build/pdm_test/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/raaf/PDM_tiago_ws/install/pdm_test/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/raaf/PDM_tiago_ws/build/pdm_test/build --no-deps symlink_data

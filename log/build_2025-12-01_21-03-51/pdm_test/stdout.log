@@ -1,0 +1,14 @@
+running develop
+running egg_info
+writing pdm_test.egg-info/PKG-INFO
+writing dependency_links to pdm_test.egg-info/dependency_links.txt
+writing entry points to pdm_test.egg-info/entry_points.txt
+writing requirements to pdm_test.egg-info/requires.txt
+writing top-level names to pdm_test.egg-info/top_level.txt
+reading manifest file 'pdm_test.egg-info/SOURCES.txt'
+writing manifest file 'pdm_test.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/raaf/PDM_tiago_ws/install/pdm_test/lib/python3.10/site-packages/pdm-test.egg-link (link to .)
+
+Installed /home/raaf/PDM_tiago_ws/build/pdm_test
+running symlink_data
