@@ -1,9 +1,0 @@
-source;share/PDM_tiago_assignment/hook/pythonpath.ps1
-source;share/PDM_tiago_assignment/hook/pythonpath.dsv
-source;share/PDM_tiago_assignment/hook/pythonpath.sh
-source;share/PDM_tiago_assignment/hook/ament_prefix_path.ps1
-source;share/PDM_tiago_assignment/hook/ament_prefix_path.dsv
-source;share/PDM_tiago_assignment/hook/ament_prefix_path.sh
-source;../../build/PDM_tiago_assignment/share/PDM_tiago_assignment/hook/pythonpath_develop.ps1
-source;../../build/PDM_tiago_assignment/share/PDM_tiago_assignment/hook/pythonpath_develop.dsv
-source;../../build/PDM_tiago_assignment/share/PDM_tiago_assignment/hook/pythonpath_develop.sh
