@@ -7,7 +7,7 @@ package_name = 'pdm_test'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=[],  # no Python modules right now; fine for a "resources + launch" package
+    packages=['pdm_test'],
     data_files=[
         # ament index registration
         ('share/ament_index/resource_index/packages',
@@ -32,6 +32,8 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            'straight_driver = pdm_test.straight_driver:main',
+        ],
     },
 )

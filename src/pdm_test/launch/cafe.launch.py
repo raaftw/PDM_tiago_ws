@@ -1,10 +1,9 @@
-import os
-
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable, IncludeLaunchDescription, LogInfo
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
@@ -13,50 +12,51 @@ def generate_launch_description():
 
     declare_world_name = DeclareLaunchArgument(
         'world_name',
-        default_value='cafe',  # options: cafe, cafe_table, cafe_dynamic
+        default_value='empty',
         description=(
             'World name (without .world extension) to load from pdm_test/worlds. '
-            'Valid options: cafe, cafe_table, cafe_dynamic'
+            'Valid options: cafe, cafe_table, cafe_dynamic, empty'
         )
     )
 
-    # Get this package's share/worlds directory
-    pdm_share = get_package_share_directory('pdm_test')
-    worlds_dir = os.path.join(pdm_share, 'worlds')
-
-    # Make sure Gazebo can find our worlds by name (cafe, cafe_table, etc.)
-    # We prepend our worlds_dir to any existing GAZEBO_RESOURCE_PATH.
-    old_gazebo_resource = os.getenv('GAZEBO_RESOURCE_PATH', '')
-    new_gazebo_resource = worlds_dir if not old_gazebo_resource \
-        else worlds_dir + os.pathsep + old_gazebo_resource
+    # Point Gazebo to our package worlds using substitutions so resolution
+    # happens at launch time (avoids evaluating substitutions early).
+    worlds_dir = PathJoinSubstitution([FindPackageShare('pdm_test'), 'worlds'])
 
     set_gazebo_resource_path = SetEnvironmentVariable(
         name='GAZEBO_RESOURCE_PATH',
-        value=new_gazebo_resource,
+        value=worlds_dir,
     )
 
-    # Path to PAL's TIAGo Gazebo launch file (from tiago_public_ws)
-    tiago_gazebo_share = get_package_share_directory('tiago_gazebo')
-    tiago_gazebo_launch = os.path.join(
-        tiago_gazebo_share, 'launch', 'tiago_gazebo.launch.py'
-    )
+    # Path to PAL's TIAGo Gazebo launch file (from tiago_public_ws).
+    # Use substitutions so the file path is resolved at launch time.
+    tiago_gazebo_launch = PathJoinSubstitution([
+        FindPackageShare('tiago_gazebo'), 'launch', 'tiago_gazebo.launch.py'
+    ])
 
-    # Include TIAGo simulation, telling it to use our world name
+    # Include TIAGo simulation, telling it to use our world name.
     tiago_sim = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(tiago_gazebo_launch),
+        PythonLaunchDescriptionSource([tiago_gazebo_launch]),
         launch_arguments={
-            # public simulation is required when using tiago_public_ws
             'is_public_sim': 'True',
-            # This is how PAL selects worlds, e.g. world_name:=pal_office
             'world_name': world_name,
-            # You can also add navigation/moveit flags later if you want:
-            # 'navigation': 'True',
-            # 'moveit': 'True',
         }.items()
     )
 
-    return LaunchDescription([
-        declare_world_name,
-        set_gazebo_resource_path,
-        tiago_sim,
-    ])
+    # Launch a simple straight-driving node so the robot moves forward.
+    straight_driver_node = Node(
+        package='pdm_test',
+        executable='straight_driver',
+        name='straight_driver',
+        output='screen',
+        parameters=[{'linear_speed': 0.2, 'angular_speed': 0.5, 'duration': 60.0}],
+    )
+
+    ld = LaunchDescription()
+    ld.add_action(declare_world_name)
+    ld.add_action(set_gazebo_resource_path)
+    ld.add_action(straight_driver_node)
+    # Add a small info log so we can verify the launch file was processed.
+    ld.add_action(LogInfo(msg=['Launching TIAGo sim with world: ', world_name]))
+    ld.add_action(tiago_sim)
+    return ld
