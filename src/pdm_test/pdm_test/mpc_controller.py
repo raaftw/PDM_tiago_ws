@@ -5,6 +5,9 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 import numpy as np
 import math
+from pdm_test.models.tiago_diff_drive_model import TiagoDifferentialDriveModel
+import scipy.optimize
+
 
 class MpcController(Node):
     """
@@ -30,6 +33,7 @@ class MpcController(Node):
         self.v_const = float(self.declare_parameter('v_const', 1.0).value)
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         self.max_v = float(self.declare_parameter('max_v', 5.0).value)
+        self.v_min = float(self.declare_parameter('v_min', -0.5).value)
         self.max_omega = float(self.declare_parameter('max_omega', 5.0).value)
 
         # MPC-specific parameters
@@ -39,13 +43,14 @@ class MpcController(Node):
         self.R_v = float(self.declare_parameter('R_v', 0.1).value)       
         self.R_omega = float(self.declare_parameter('R_omega', 0.1).value)
 
+        self.robot_model = TiagoDifferentialDriveModel(dt=self.dt)
 
         # Create publisher for cmd_vel
-        self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         # Create subscriptions to odom and path (global planner)
         self.create_subscription(Odometry, '/mobile_base_controller/odom', self._odom_cb, 10)  # to get current state (gazebo odometry)
-        self.create_subscription(Path, 'reference_path', self._path_cb, 10)  # to get the reference path
+        self.create_subscription(Path, '/reference_path', self._path_cb, 10)  # to get the reference path
 
         # Create control timer
         self.create_timer(1.0 / self.control_rate, self._control_timer_cb)
@@ -161,18 +166,92 @@ class MpcController(Node):
 
         return v, omega
 
-    def _compute_mpc_control(self, state: 'np.ndarray', ref_path: 'np.ndarray') -> tuple:
-        """
-        MPC-based controller: optimize over horizon.
-        """
-
-        self.get_logger().info('Running MPC controller')
-        
-        # TODO: Implement actual MPC here
+    def _extract_reference_trajectory(self, current_state, ref_path):
+      """Extract next N points from global path."""
+      current_pos = current_state[0:2]
+      distances = np.linalg.norm(ref_path[:, 0:2] - current_pos, axis=1)
+      nearest_idx = np.argmin(distances)
       
+      end_idx = min(nearest_idx + self.mpc_horizon, len(ref_path))
+      x_ref_traj = ref_path[nearest_idx:end_idx]
+      
+      # Pad if needed
+      if len(x_ref_traj) < self.mpc_horizon:
+          last_point = ref_path[-1]
+          padding = np.tile(last_point, (self.mpc_horizon - len(x_ref_traj), 1))
+          x_ref_traj = np.vstack([x_ref_traj, padding])
+      
+      return x_ref_traj
 
-        # For now, fall back to dummy
-        return self._compute_dummy_control(state, ref_path)
+
+    def _compute_cost(self, current_state, u_seq, x_ref_traj):
+      """Compute MPC cost WITHOUT terminal cost."""
+      
+      N = self.mpc_horizon
+      cost = 0.0
+      
+      # Simulate full trajectory using robot model
+      x_traj = self.robot_model.simulate_trajectory(current_state, u_seq)
+      
+      for k in range(N):
+          # Get predicted state at step k+1
+          x_next = x_traj[k + 1]
+          
+          # Tracking error against reference
+          x_ref_k = x_ref_traj[k]
+          error_state = x_next - x_ref_k
+          error_state[2] = self._wrap_to_pi(error_state[2])
+          
+          # State tracking cost
+          state_cost = (self.Q_x * error_state[0]**2 + 
+                        self.Q_y * error_state[1]**2 + 
+                        self.Q_theta * error_state[2]**2)
+          
+          # Control effort cost
+          v_k, omega_k = u_seq[k]
+          control_cost = self.R_v * v_k**2 + self.R_omega * omega_k**2
+          
+          cost += state_cost + control_cost
+      
+      return cost
+
+
+    def _compute_mpc_control(self, state, ref_path):
+      """MPC controller: solve optimization, return first control."""
+      
+      # Extract reference trajectory
+      x_ref_traj = self._extract_reference_trajectory(state, ref_path)
+      
+      # Initial guess: constant forward motion
+      u_init = np.zeros((self.mpc_horizon, 2))
+      u_init[:, 0] = self.v_const
+      u_init_flat = u_init.flatten()
+      
+      # Objective function
+      def objective(u_flat):
+          u_seq = u_flat.reshape((self.mpc_horizon, 2))
+          return self._compute_cost(state, u_seq, x_ref_traj)
+      
+      # Define bounds for each control
+      bounds = []
+      for k in range(self.mpc_horizon):
+          bounds.append((self.v_min, self.max_v))           # v bounds
+          bounds.append((-self.max_omega, self.max_omega))  # ω bounds
+      
+      # Solve
+      result = scipy.optimize.minimize(
+          objective,
+          u_init_flat,
+          method='SLSQP',
+          bounds=bounds,
+          options={'maxiter': 50}
+      )
+      
+      u_opt = result.x.reshape((self.mpc_horizon, 2))
+      
+      # Return first control input only (receding horizon)
+      return u_opt[0, 0], u_opt[0, 1]
+
 
         
     def _wrap_to_pi(self, angle: float) -> float:

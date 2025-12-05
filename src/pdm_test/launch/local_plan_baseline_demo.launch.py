@@ -86,14 +86,21 @@ def generate_launch_description():
         package='pdm_test',
         executable='mpc_controller',
         name='mpc_controller',
-        output='screen',
         parameters=[{
             'control_rate': 10.0,
+            'mpc_horizon': 10,
+            'dt': 0.1,
             'k_heading': k_heading,
             'v_const': v_const,
             'max_v': 5.0,
             'max_omega': 5.0,
-            'controller_type': controller_type,
+            'v_min': -0.5,
+            'controller_type': controller_type, 
+            'Q_x': 10.0,
+            'Q_y': 10.0,
+            'Q_theta': 5.0,
+            'R_v': 0.1,
+            'R_omega': 0.1,
         }],
     )
 
