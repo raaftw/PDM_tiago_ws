@@ -24,7 +24,7 @@ setup(
         (os.path.join('share', package_name, 'launch'),
          glob('launch/*.py')),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'numpy', 'scipy'],
     zip_safe=True,
     maintainer='raaf',
     maintainer_email='59016069+raaftw@users.noreply.github.com',
@@ -34,6 +34,8 @@ setup(
     entry_points={
         'console_scripts': [
             'straight_driver = pdm_test.straight_driver:main',
+            'trajectory_generator = pdm_test.trajectory_generator:main',
+            'mpc_controller = pdm_test.mpc_controller:main'
         ],
     },
 )
