@@ -317,65 +317,65 @@
       <pose>0.004057 0.017408 0 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>3607 361000000</sim_time>
-      <real_time>3611 901081622</real_time>
-      <wall_time>1764185010 499047956</wall_time>
-      <iterations>3607361</iterations>
+      <sim_time>3770 323000000</sim_time>
+      <real_time>170 731516608</real_time>
+      <wall_time>1764942535 897774619</wall_time>
+      <iterations>162962</iterations>
       <model name='cafe'>
-        <pose>0.004057 0.017408 0 0 -0 0</pose>
+        <pose>0.004057 0.017408 -0.198575 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>0.004057 0.017408 0 0 -0 0</pose>
+          <pose>0.004057 0.017408 -0.198575 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cafe_table'>
-        <pose>2.16008 -0.915325 0.19039 0 -0 0</pose>
+        <pose>2.16008 -0.915325 0.000235 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>2.16008 -0.915325 0.19039 0 -0 0</pose>
+          <pose>2.16008 -0.915325 0.000235 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cafe_table_clone'>
-        <pose>2.07566 -3.79408 0.19039 0 -0 0</pose>
+        <pose>2.07566 -3.79408 -0.003349 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>2.07566 -3.79408 0.19039 0 -0 0</pose>
+          <pose>2.07566 -3.79408 -0.003349 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cafe_table_clone_0'>
-        <pose>2.04962 -6.85745 0.19039 0 -0 0</pose>
+        <pose>2.04962 -6.85745 0.0029 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>2.04962 -6.85745 0.19039 0 -0 0</pose>
+          <pose>2.04962 -6.85745 0.0029 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cafe_table_clone_1'>
-        <pose>-2.24894 -7.06797 0.19039 0 -0 0</pose>
+        <pose>-2.24894 -7.06797 0.003327 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-2.24894 -7.06797 0.19039 0 -0 0</pose>
+          <pose>-2.24894 -7.06797 0.003327 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='cafe_table_clone_2'>
-        <pose>-2.40527 -3.48921 0.19039 0 -0 0</pose>
+        <pose>-2.40527 -3.48921 4.1e-05 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose>-2.40527 -3.48921 0.19039 0 -0 0</pose>
+          <pose>-2.40527 -3.48921 4.1e-05 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -792,7 +792,7 @@
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>2.15031 -16.1228 15.2329 -0 0.807644 1.6842</pose>
+        <pose>-0.295736 -14.8703 6.73213 0 0.439643 1.6682</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
