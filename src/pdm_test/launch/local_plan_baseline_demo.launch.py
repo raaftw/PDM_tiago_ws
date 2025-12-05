@@ -37,10 +37,18 @@ def generate_launch_description():
         description='Constant forward velocity (m/s)'
     )
 
+    # controller_type argument
+    declare_controller_type = DeclareLaunchArgument(
+        'controller_type',
+        default_value='dummy',
+        description='Controller type: dummy or mpc'
+    )
+
     world_name = LaunchConfiguration('world_name')
     path_type = LaunchConfiguration('path_type')
     k_heading = LaunchConfiguration('k_heading')
     v_const = LaunchConfiguration('v_const')
+    controller_type = LaunchConfiguration('controller_type')
 
 
     cafe_launch_path = PathJoinSubstitution([
@@ -85,6 +93,7 @@ def generate_launch_description():
             'v_const': v_const,
             'max_v': 5.0,
             'max_omega': 5.0,
+            'controller_type': controller_type,
         }],
     )
 
@@ -95,13 +104,12 @@ def generate_launch_description():
         name='rviz2',
         output='screen',
         arguments=['-f', 'odom']
-        # arguments=['-d', PathJoinSubstitution([FindPackageShare('pdm_test'), 'launch', 'mpc_baseline_demo.rviz'])]
     )
 
     log_info = LogInfo(msg=[
         'Launching baseline MPC path follower: ',
         'world=', world_name, ' path_type=', path_type,
-        ' k_heading=', k_heading, ' v=', v_const
+        ' k_heading=', k_heading, ' v=', v_const, ' controller=', controller_type
     ])
 
     ld = LaunchDescription()
@@ -110,6 +118,7 @@ def generate_launch_description():
     ld.add_action(declare_path_type)
     ld.add_action(declare_k_heading)
     ld.add_action(declare_v_const)
+    ld.add_action(declare_controller_type)
 
     # Add nodes/launches
     ld.add_action(cafe_sim)
@@ -117,6 +126,7 @@ def generate_launch_description():
     ld.add_action(mpc_node)
     ld.add_action(log_info)
     ld.add_action(rviz_node)
+    
 
     return ld
 

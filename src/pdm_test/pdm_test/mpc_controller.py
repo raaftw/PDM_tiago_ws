@@ -15,7 +15,8 @@ class MpcController(Node):
       - mpc_horizon (int)
       - dt (float)
       - max_v, max_omega (limits)
-      - optional gains (k_v, k_theta) for a fallback controller
+      - controller_type: "dummy" or "mpc"
+      - dummy controller gains (v_const, k_heading) 
     """
 
     def __init__(self):
@@ -24,11 +25,20 @@ class MpcController(Node):
         # Get parameters and store locally
         self.control_rate = float(self.declare_parameter('control_rate', 10.0).value)
         self.mpc_horizon = int(self.declare_parameter('mpc_horizon', 10).value)
+        self.controller_type = str(self.declare_parameter('controller_type', 'dummy').value)
         self.k_heading = float(self.declare_parameter('k_heading', 2.0).value)
         self.v_const = float(self.declare_parameter('v_const', 1.0).value)
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         self.max_v = float(self.declare_parameter('max_v', 5.0).value)
         self.max_omega = float(self.declare_parameter('max_omega', 5.0).value)
+
+        # MPC-specific parameters
+        self.Q_x = float(self.declare_parameter('Q_x', 10.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 10.0).value)
+        self.Q_theta = float(self.declare_parameter('Q_theta', 5.0).value)
+        self.R_v = float(self.declare_parameter('R_v', 0.1).value)       
+        self.R_omega = float(self.declare_parameter('R_omega', 0.1).value)
+
 
         # Create publisher for cmd_vel
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
@@ -42,6 +52,10 @@ class MpcController(Node):
 
         self.current_state = None   # numpy array [x,y,theta]
         self.reference_path = None  # numpy array (N,3)
+        self.prev_v = 0.0  # For acceleration limiting
+         
+        self.get_logger().info(f'Local planner initialized with type: {self.controller_type}')
+
 
     def _odom_cb(self, msg: 'Odometry'):
         """
@@ -103,21 +117,30 @@ class MpcController(Node):
 
       self.get_logger().debug(f'Publishing v={v:.3f}, omega={omega:.3f}')
 
-
       self.cmd_pub.publish(twist_msg)
 
+      self.prev_v = v  # Store for acceleration limiting
 
     def compute_control(self, state: 'np.ndarray', ref_path: 'np.ndarray') -> tuple:
-        """
-        Compute control (v, omega) to follow ref_path from current state. This is just a proportional controller on the heading and constant v.
+      """
+      Main dispatcher: choose controller based on parameter.
+      
+      Returns: (v, omega)
+      """
+      if self.controller_type == 'dummy':
+          return self._compute_dummy_control(state, ref_path)
+      elif self.controller_type == 'mpc':
+          return self._compute_mpc_control(state, ref_path)
+      else:
+          self.get_logger().warn(f'Unknown controller_type: {self.controller_type}, using dummy')
+          return self._compute_dummy_control(state, ref_path)
 
 
-        Later replace this method with MPC:
-         - setup optimization over horizon using model predictions
-         - solve for control sequence and return first control
+    def _compute_dummy_control(self, state: 'np.ndarray', ref_path: 'np.ndarray') -> tuple:
         """
-        
-        # Baseline controller (just P control to follow the path)
+        Baseline proportional controller on heading + constant velocity.
+        This is your current dummy controller.
+        """
         position = state[0:2]
 
         # Find nearest point on reference path
@@ -132,13 +155,26 @@ class MpcController(Node):
         heading_error = self._wrap_to_pi(desired_theta - state[2])
 
         # P controller for heading
-        k_heading = 2.0  # gain for heading
         omega = self.k_heading * heading_error  
 
         v = self.v_const  # constant forward speed (from parameter)
 
         return v, omega
 
+    def _compute_mpc_control(self, state: 'np.ndarray', ref_path: 'np.ndarray') -> tuple:
+        """
+        MPC-based controller: optimize over horizon.
+        """
+
+        self.get_logger().info('Running MPC controller')
+        
+        # TODO: Implement actual MPC here
+      
+
+        # For now, fall back to dummy
+        return self._compute_dummy_control(state, ref_path)
+
+        
     def _wrap_to_pi(self, angle: float) -> float:
         """
         Robust angle normalization.
