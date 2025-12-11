@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from glob import glob
 import os
 
@@ -7,7 +7,7 @@ package_name = 'pdm_test'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=['pdm_test'],
+    packages=find_packages(),
     data_files=[
         # ament index registration
         ('share/ament_index/resource_index/packages',
