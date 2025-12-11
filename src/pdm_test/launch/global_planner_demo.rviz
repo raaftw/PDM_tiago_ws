@@ -1,0 +1,58 @@
+Panels:
+  - Class: rviz/Displays
+    Name: Displays
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Name: Tool Properties
+  - Class: rviz/Views
+    Name: Views
+    Expanded: true
+  - Class: rviz/Time
+    Name: Time
+
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Map
+      Enabled: true
+      Name: Map
+      Topic: /map
+      Queue Size: 10
+      Color Scheme: map
+    - Class: rviz/Path
+      Enabled: true
+      Name: Global Path
+      Topic: /global_path
+      Color: 0.0; 0.8; 0.2; 1.0
+      Line Style: Lines
+      Line Width: 0.05
+      Buffer Length: 1
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+    - Class: rviz/Select
+    - Class: rviz/MoveCamera
+    - Class: rviz/Measure
+  Views:
+    Current:
+      Class: rviz/TopDownOrtho
+      Target Frame: map
+      Value: 0
+  Value: root
+
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 900
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000200000000000002ec00000326fc0200000005fb0000001200000326000001eafc0100000002fb000000100044006900730070006c00610079007300000001e5000001490000000100000003000004bc00000326fc0200000004fb0000000c0054006f006f006c007300000000e4000000c40000000000000000fb0000000a005600690065007700730000000050000000c40000000000000000fb0000000c00540069006d00650000000000000000c400000000000000000000028d00000326000000020000000200000000000000010000000200000000
+  Width: 1600
+  X: 100
+  Y: 100
