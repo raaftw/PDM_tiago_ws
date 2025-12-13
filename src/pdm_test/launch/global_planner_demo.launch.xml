@@ -1,7 +1,7 @@
 <launch>
   <arg
     name="map"
-    default="$(find-pkg-share pdm_test)/maps/walls_blocks_map.yaml"
+    default="$(find-pkg-share pdm_test)/maps/cafe_map.yaml"
     description="Full path to map YAML file"/>
 
   <node pkg="nav2_map_server" exec="map_server" name="map_server" output="screen">
