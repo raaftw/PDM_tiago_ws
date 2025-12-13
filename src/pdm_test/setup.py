@@ -16,13 +16,19 @@ setup(
         # package.xml
         ('share/' + package_name, ['package.xml']),
 
-        # install Gazebo worlds
+        # install Gazebo worlds (if present)
         (os.path.join('share', package_name, 'worlds'),
          glob('worlds/*.world')),
 
-        # install launch files
+        # install all launch files (py, xml) and rviz configs located in launch/
         (os.path.join('share', package_name, 'launch'),
-         glob('launch/*.py')),
+         glob('launch/*')),
+
+        # install maps (yaml + pgm) from workspace src/maps into package share
+        (os.path.join('share', package_name, 'maps'),
+         glob(os.path.join('..', 'maps', '*.yaml'))),
+        (os.path.join('share', package_name, 'maps'),
+         glob(os.path.join('..', 'maps', '*.pgm'))),
     ],
     install_requires=['setuptools', 'numpy', 'scipy'],
     zip_safe=True,
@@ -35,7 +41,8 @@ setup(
         'console_scripts': [
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
-            'mpc_controller = pdm_test.mpc_controller:main'
+            'mpc_controller = pdm_test.mpc_controller:main',
+            'global_planner = pdm_test.global_planner:main'
         ],
     },
 )
