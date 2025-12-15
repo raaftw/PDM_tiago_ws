@@ -23,6 +23,9 @@ setup(
         # install launch files
         (os.path.join('share', package_name, 'launch'),
          glob('launch/*.py')),
+
+        (os.path.join('share', package_name, 'maps'), 
+         glob(os.path.join('..', 'maps', '*')))
     ],
     install_requires=['setuptools', 'numpy', 'scipy'],
     zip_safe=True,
@@ -35,7 +38,8 @@ setup(
         'console_scripts': [
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
-            'mpc_controller = pdm_test.mpc_controller:main'
+            'mpc_controller = pdm_test.mpc_controller:main',
+            'obstacle_publisher=pdm_test.obstacle_publisher:main',
         ],
     },
 )

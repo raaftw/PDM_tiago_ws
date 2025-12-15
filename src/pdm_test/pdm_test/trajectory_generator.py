@@ -47,7 +47,7 @@ class TrajectoryGenerator(Node):
         self.radius = self.circle_radius
 
         # TODO: Change to map frame, when available
-        self.frame_id = self.declare_parameter('frame_id', 'odom').value
+        self.frame_id = self.declare_parameter('frame_id', 'map').value
 
 
         # Create publisher of the path
