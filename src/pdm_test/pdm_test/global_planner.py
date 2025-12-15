@@ -33,9 +33,12 @@ class RRTStarPlanner(Node):
         self.declare_parameter('step_size', 1.0)
         self.declare_parameter('goal_sample_rate', 0.3)
         self.declare_parameter('rewire_radius', 3.0)
+        self.declare_parameter('robot_radius', 0.27)  # half of 54cm base
+        self.declare_parameter('safety_margin', 0.30)  # 30cm clearance
 
         self.map_data = None
         self.start_pose = None
+        self.inflated_map = None  # Cache inflated map for speed
         
         latched_qos = QoSProfile(
             depth=1,
@@ -54,7 +57,8 @@ class RRTStarPlanner(Node):
     def map_callback(self, msg: OccupancyGrid):
         if self.map_data is None:
             self.map_data = msg
-            self.get_logger().info("Map received.")
+            self._inflate_map()
+            self.get_logger().info("Map received and inflated.")
 
     def pose_callback(self, msg: PoseStamped):
         self.current_robot_pose = msg
@@ -91,17 +95,57 @@ class RRTStarPlanner(Node):
         origin_y = self.map_data.info.origin.position.y
         return int((x - origin_x) / res), int((y - origin_y) / res)
 
+    def _inflate_map(self):
+        """
+        Pre-compute inflated map once. Much faster than checking circle on every call.
+        Inflates obstacles by robot_radius + safety_margin.
+        """
+        robot_radius = self.get_parameter('robot_radius').value
+        safety_margin = self.get_parameter('safety_margin').value
+        total_radius = robot_radius + safety_margin
+        
+        res = self.map_data.info.resolution
+        inflate_cells = int(math.ceil(total_radius / res))
+        
+        width = self.map_data.info.width
+        height = self.map_data.info.height
+        
+        # Copy original map
+        self.inflated_map = list(self.map_data.data)
+        
+        # Pre-compute circular kernel indices
+        kernel = []
+        for dx in range(-inflate_cells, inflate_cells + 1):
+            for dy in range(-inflate_cells, inflate_cells + 1):
+                dist = math.sqrt(dx*dx + dy*dy) * res
+                if dist <= total_radius:
+                    kernel.append((dx, dy))
+        
+        # Inflate obstacles
+        for gy in range(height):
+            for gx in range(width):
+                index = gy * width + gx
+                if self.map_data.data[index] >= 30:  # Occupied cell
+                    # Inflate around this obstacle
+                    for dx, dy in kernel:
+                        ngx, ngy = gx + dx, gy + dy
+                        if 0 <= ngx < width and 0 <= ngy < height:
+                            nindex = ngy * width + ngx
+                            self.inflated_map[nindex] = 100  # Mark as occupied
+        
+        self.get_logger().info(f"Map inflated with {total_radius:.2f}m radius ({inflate_cells} cells)")
+    
     def _is_valid_cell(self, x: float, y: float) -> bool:
+        """
+        Check if position (x, y) is valid using pre-inflated map (much faster).
+        """
         gx, gy = self._world_to_grid(x, y)
         if gx < 0 or gx >= self.map_data.info.width or \
            gy < 0 or gy >= self.map_data.info.height:
             return False
         
         index = gy * self.map_data.info.width + gx
-        occupancy = self.map_data.data[index]
-        
-        # FIX 3: Map data is 0-100. '30' is a standard threshold.
-        return occupancy < 30
+        return self.inflated_map[index] < 30
 
     def _check_line(self, n1, n2) -> bool:
         # FIX 4: Use REAL distance here to calculate steps
