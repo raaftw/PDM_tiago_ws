@@ -50,7 +50,7 @@ class RRTStarPlanner(Node):
         self.create_subscription(PoseStamped, '/amcl_pose', self.pose_callback, 10)
         self.create_subscription(PoseWithCovarianceStamped, '/initialpose', self.initialpose_callback, 10)
         self.create_subscription(PoseStamped, '/goal_pose', self.goal_callback, 10)
-        self.path_publisher = self.create_publisher(Path, '/global_path', latched_qos)
+        self.path_publisher = self.create_publisher(Path, '/reference_path', latched_qos)
         
         self.get_logger().info("Waiting for map...")
 
