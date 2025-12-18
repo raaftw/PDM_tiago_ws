@@ -1,27 +1,15 @@
-"""
-rrt_connect.py
-
-RRT-Connect in joint space (7D).
-Uses:
-- is_state_valid(q)
-- is_edge_valid(q1,q2)
-"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Callable, List, Optional, Sequence
+# rrt_connect.py
 import random
 import math
+from dataclasses import dataclass
+from typing import Callable, List, Optional, Sequence
 
 from .collision_checker import JOINT_LIMITS
-
 
 @dataclass
 class Node:
     q: List[float]
     parent: Optional["Node"] = None
-
 
 class RRTConnect:
     def __init__(
@@ -29,8 +17,8 @@ class RRTConnect:
         is_state_valid: Callable[[Sequence[float]], bool],
         is_edge_valid: Callable[[Sequence[float], Sequence[float]], bool],
         step_size: float = 0.2,
-        max_iters: int = 8000,
-        goal_bias: float = 0.05,
+        max_iters: int = 2000,
+        goal_bias: float = 0.5,
     ):
         self.is_state_valid = is_state_valid
         self.is_edge_valid = is_edge_valid
@@ -39,7 +27,6 @@ class RRTConnect:
         self.goal_bias = goal_bias
 
     def _sample(self, q_goal: Sequence[float]) -> List[float]:
-        # small goal bias helps convergence
         if random.random() < self.goal_bias:
             return list(q_goal)
         return [random.uniform(lo, hi) for (lo, hi) in JOINT_LIMITS]
@@ -55,26 +42,21 @@ class RRTConnect:
         d = self._dist(q_from, q_to)
         if d <= self.step_size:
             return list(q_to)
-        return [a + (b - a) * (self.step_size / d) for a, b in zip(q_from, q_to)]
+        alpha = self.step_size / max(d, 1e-9)
+        return [a + (b - a) * alpha for a, b in zip(q_from, q_to)]
 
     def _extend(self, tree: List[Node], q_target: Sequence[float]) -> Optional[Node]:
         n_near = self._nearest(tree, q_target)
         q_new = self._steer(n_near.q, q_target)
-
         if not self.is_state_valid(q_new):
             return None
         if not self.is_edge_valid(n_near.q, q_new):
             return None
-
         n_new = Node(q=q_new, parent=n_near)
         tree.append(n_new)
         return n_new
 
     def _connect(self, tree: List[Node], q_target: Sequence[float]) -> Optional[Node]:
-        """
-        Try to connect tree to q_target by repeated extends.
-        Return the last node if it got close enough.
-        """
         while True:
             n_new = self._extend(tree, q_target)
             if n_new is None:
@@ -84,7 +66,7 @@ class RRTConnect:
 
     @staticmethod
     def _trace_path(n: Node) -> List[List[float]]:
-        path = []
+        path: List[List[float]] = []
         cur = n
         while cur is not None:
             path.append(cur.q)
@@ -107,13 +89,10 @@ class RRTConnect:
             if na is not None:
                 nb = self._connect(Tb, na.q)
                 if nb is not None:
-                    # Paths meet: Ta root -> na, Tb root -> nb
                     path_a = self._trace_path(na)
                     path_b = self._trace_path(nb)
-                    path_b.reverse()  # nb -> ... -> goal
-                    return path_a + path_b[1:]  # avoid duplicate join state
-
+                    path_b.reverse()
+                    return path_a + path_b[1:]
             Ta, Tb = Tb, Ta
-
         return None
 

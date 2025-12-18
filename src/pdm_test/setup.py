@@ -42,8 +42,12 @@ setup(
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
             'mpc_controller = pdm_test.mpc_controller:main',
-            'global_planner = pdm_test.global_planner:main'
+            'global_planner = pdm_test.global_planner:main',
             'tiago_table_cleaner = pdm_test.tiago_table_cleaner:main',
+            'tiago_table_cleaner_simple = pdm_test.tiago_table_cleaner_simple:main',
+            'tiago_table_cleaner_fk = pdm_test.tiago_table_cleaner_fk:main',
+            'tiago_table_cleaner_local_fk = pdm_test.tiago_table_cleaner_local_fk:main',
+            'tiago_table_cleaner_rrt = pdm_test.tiago_table_cleaner_rrt:main',
         ],
     },
 )

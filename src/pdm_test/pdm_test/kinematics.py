@@ -1,102 +1,124 @@
-"""
-kinematics.py
-
-Simplified kinematics for TIAGo arm planning (course project).
-Provides:
-- fk_end_effector(q): (x, y, z)
-- ik_solve_xyz(target_xyz, q_seed): numerical IK using finite differences
-
-NOTE:
-This is not exact TIAGo URDF FK. It's a consistent model to:
-- support collision constraints (table plane)
-- support IK to map wipe points to joint goals
-"""
-
-from __future__ import annotations
-
-from typing import Sequence, Tuple, Optional
-import numpy as np
+# kinematics.py
 import math
+import numpy as np
+from typing import List, Optional
 
+# -----------------------------
+# Arm mount transform
+# -----------------------------
+ARM_MOUNT = {
+    "x": 0.15505,
+    "y": 0.014,
+    "z": -0.151,
+    "roll": 0.0,
+    "pitch": 0.0,
+    "yaw": -math.pi / 2.0,
+}
 
-# Approximate link lengths (meters) for a planar reach model
-L1 = 0.35
-L2 = 0.30
-L3 = 0.25
+# -----------------------------
+# Joint limits
+# -----------------------------
+JOINT_LIMITS = [
+    (0.0, 2.7489),
+    (-1.5708, 1.0908),
+    (-3.5343, 1.5708),
+    (-0.3927, 2.3562),
+    (-2.0944, 2.0944),
+    (-1.4137, 1.4137),
+    (-2.0944, 2.0944),
+]
 
-# Base height and vertical "lift" controlled by q4
-BASE_Z = 0.65
-Z_AMP = 0.20  # z in [BASE_Z - 0.2, BASE_Z + 0.2]
+# -----------------------------
+# Rotation helpers
+# -----------------------------
+def rotz(theta): 
+    c, s = math.cos(theta), math.sin(theta)
+    return np.array([[c, -s, 0],
+                     [s,  c, 0],
+                     [0,  0, 1]])
 
+def rotx(a): 
+    c, s = math.cos(a), math.sin(a)
+    return np.array([[1, 0, 0],
+                     [0, c, -s],
+                     [0, s,  c]])
 
-def fk_end_effector(q: Sequence[float]) -> Tuple[float, float, float]:
+def roty(b): 
+    c, s = math.cos(b), math.sin(b)
+    return np.array([[c, 0, s],
+                     [0, 1, 0],
+                     [-s,0, c]])
+
+def rpy_to_rot(r, p, y): 
+    return rotz(y) @ roty(p) @ rotx(r)
+
+# -----------------------------
+# Mount transform
+# -----------------------------
+def mount_base_to_arm():
+    R = rpy_to_rot(ARM_MOUNT["roll"], ARM_MOUNT["pitch"], ARM_MOUNT["yaw"])
+    t = np.array([ARM_MOUNT["x"], ARM_MOUNT["y"], ARM_MOUNT["z"]])
+    return R, t
+
+# -----------------------------
+# Forward kinematics (simplified)
+# -----------------------------
+def fk_end_effector(q: List[float], tip=True):
     """
-    Simplified FK:
-    - q1,q2,q3 control planar reach (x,y)
-    - q4 controls z (sine mapping)
-    - remaining joints don't affect xyz in this simplified model
+    Simplified FK: approximate tool tip position.
+    Replace with your actual chain if available.
     """
-    q1, q2, q3, q4, q5, q6, q7 = q
-
-    # Planar 3-link chain
-    th1 = q1
-    th2 = q1 + q2
-    th3 = q1 + q2 + q3
-
-    x = L1 * math.cos(th1) + L2 * math.cos(th2) + L3 * math.cos(th3)
-    y = L1 * math.sin(th1) + L2 * math.sin(th2) + L3 * math.sin(th3)
-
-    z = BASE_Z + Z_AMP * math.sin(q4)
-
+    # Just a toy model: linear combination of a few joints
+    x = 0.3 + 0.1 * q[0]
+    y = -0.2 + 0.05 * q[1]
+    z = 0.5 + 0.05 * q[2]
     return (x, y, z)
 
-
-def _numeric_jacobian(q: np.ndarray, eps: float = 1e-4) -> np.ndarray:
+# -----------------------------
+# Jacobian (simplified)
+# -----------------------------
+def jacobian_pos(q: List[float], tip=True):
     """
-    Finite-difference Jacobian for xyz wrt joints (7x -> 3).
+    Dummy Jacobian: identity scaled.
+    Replace with actual Jacobian if available.
     """
-    f0 = np.array(fk_end_effector(q.tolist()), dtype=float)
-    J = np.zeros((3, 7), dtype=float)
+    return np.eye(3, 7)
 
-    for i in range(7):
-        qp = q.copy()
-        qp[i] += eps
-        fp = np.array(fk_end_effector(qp.tolist()), dtype=float)
-        J[:, i] = (fp - f0) / eps
-
-    return J
-
-
+# -----------------------------
+# IK solver (damped least squares)
+# -----------------------------
 def ik_solve_xyz(
-    target_xyz: Tuple[float, float, float],
-    q_seed: Sequence[float],
+    target: List[float],
+    q_seed: List[float],
     max_iters: int = 200,
-    tol: float = 1e-3,
-    damping: float = 1e-2,
+    tol: float = 1e-4,
+    damping: float = 1e-3,
+    tip: bool = True,
 ) -> Optional[np.ndarray]:
     """
-    Numerical IK (damped least squares) to match end-effector xyz.
-
-    Returns:
-        np.ndarray shape (7,) if success, else None
+    Iterative IK solver using damped least squares.
     """
     q = np.array(q_seed, dtype=float)
-    target = np.array(target_xyz, dtype=float)
-
     for _ in range(max_iters):
-        cur = np.array(fk_end_effector(q.tolist()), dtype=float)
-        err = target - cur
+        px, py, pz = fk_end_effector(q.tolist(), tip=tip)
+        err = np.array(target) - np.array([px, py, pz])
         if np.linalg.norm(err) < tol:
             return q
 
-        J = _numeric_jacobian(q)
-        # Damped least squares: dq = J^T (J J^T + λI)^-1 err
-        JJt = J @ J.T
-        dq = J.T @ np.linalg.solve(JJt + damping * np.eye(3), err)
+        J = jacobian_pos(q.tolist(), tip=tip)
+        JT = J.T
+        H = J @ JT + (damping**2) * np.eye(3)
+        dq = JT @ np.linalg.solve(H, err)
 
-        # step limit for stability
-        step = np.clip(dq, -0.2, 0.2)
-        q = q + step
+        # Limit step size
+        if np.linalg.norm(dq) > 0.1:
+            dq *= 0.1 / np.linalg.norm(dq)
+
+        q = q + dq
+
+        # Clamp to joint limits
+        for i, (lo, hi) in enumerate(JOINT_LIMITS):
+            q[i] = max(lo, min(hi, q[i]))
 
     return None
 
