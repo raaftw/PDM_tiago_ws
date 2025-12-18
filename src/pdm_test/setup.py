@@ -42,7 +42,8 @@ setup(
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
             'mpc_controller = pdm_test.mpc_controller:main',
-            'global_planner = pdm_test.global_planner:main'
+            'global_planner = pdm_test.global_planner:main',
+            'ground_truth_republisher = pdm_test.ground_truth_republisher:main'
         ],
     },
 )

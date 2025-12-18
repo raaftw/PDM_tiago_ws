@@ -113,6 +113,14 @@ def generate_launch_description():
         arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
     )
 
+    static_tf_world_map = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_world_map',
+        output='screen',
+        arguments=['0', '0', '0', '0', '0', '0', 'world', 'map'],
+    )
+
     global_planner_node = Node(
         package='pdm_test',
         executable='global_planner',
@@ -145,6 +153,16 @@ def generate_launch_description():
         }],
     )
 
+    # ==================== GROUND TRUTH REPUBLISHER ====================
+    # Republish /ground_truth_odom as /ground_truth_pose for RViz visualization
+
+    ground_truth_republisher_node = Node(
+        package='pdm_test',
+        executable='ground_truth_republisher',
+        name='ground_truth_republisher',
+        output='screen',
+    )
+
     # ==================== BUILD LAUNCH DESCRIPTION ====================
 
     ld = LaunchDescription()
@@ -163,10 +181,14 @@ def generate_launch_description():
     ld.add_action(map_server_node)
     ld.add_action(lifecycle_manager_node)
     ld.add_action(static_tf_map_odom)
+    ld.add_action(static_tf_world_map)
     ld.add_action(global_planner_node)
     ld.add_action(rviz_node)
 
     # Add command 3: MPC Controller
     ld.add_action(mpc_node)
+
+    # Add ground truth republisher
+    ld.add_action(ground_truth_republisher_node)
 
     return ld
