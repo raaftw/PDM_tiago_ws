@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 from glob import glob
 import os
 
@@ -7,7 +7,7 @@ package_name = 'pdm_test'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=['pdm_test'],
+    packages=find_packages(),
     data_files=[
         # ament index registration
         ('share/ament_index/resource_index/packages',
@@ -42,6 +42,7 @@ setup(
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
             'mpc_controller = pdm_test.mpc_controller:main',
+            'obstacle_publisher=pdm_test.obstacle_publisher:main',
             'global_planner = pdm_test.global_planner:main',
             'ground_truth_republisher = pdm_test.ground_truth_republisher:main',
             'tiago_table_cleaner = pdm_test.tiago_table_cleaner:main',

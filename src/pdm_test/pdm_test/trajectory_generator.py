@@ -46,6 +46,7 @@ class TrajectoryGenerator(Node):
         self.center = (self.circle_center_x, self.circle_center_y)
         self.radius = self.circle_radius
 
+        # TODO: Change to map frame, when available
         self.frame_id = self.declare_parameter('frame_id', 'map').value
 
 
@@ -109,6 +110,10 @@ class TrajectoryGenerator(Node):
                                     direction=self.direction)
         else:
             xy = np.array([[0.0, 0.0]])
+
+        # Log the generated path for debugging
+        self.get_logger().debug(f'Path points: {xy}')
+        self.get_logger().info(f'Generated {self.path_type} path with {len(xy)} points: start={xy[0]}, end={xy[-1]}')
 
         # Attach orientations (theta) so downstream code has (x,y,theta)
         path_with_theta = PathGenerator.add_orientation_to_path(xy)
