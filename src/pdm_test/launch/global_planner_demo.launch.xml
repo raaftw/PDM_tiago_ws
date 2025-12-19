@@ -1,0 +1,24 @@
+<launch>
+  <arg
+    name="map"
+    default="$(find-pkg-share pdm_test)/maps/cafe_map.yaml"
+    description="Full path to map YAML file"/>
+
+  <node pkg="nav2_map_server" exec="map_server" name="map_server" output="screen">
+    <param name="yaml_filename" value="$(var map)"/>
+  </node>
+
+  <!-- Lifecycle manager to configure and activate the map_server -->
+  <node pkg="nav2_lifecycle_manager" exec="lifecycle_manager" name="lifecycle_manager_map_server" output="screen">
+    <param name="use_sim_time" value="false"/>
+    <param name="autostart" value="true"/>
+    <param name="node_names" value="[map_server]"/>
+  </node>
+
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="static_tf_map_odom" output="screen" args="0 0 0 0 0 0 map odom"/>
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="static_tf_odom_base" output="screen" args="0 0 0 0 0 0 odom base_link"/>
+
+  <node pkg="pdm_test" exec="global_planner" name="rrt_star_planner_node" output="screen"/>
+
+  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(find-pkg-share pdm_test)/launch/global_planner_demo.rviz"/>
+</launch>

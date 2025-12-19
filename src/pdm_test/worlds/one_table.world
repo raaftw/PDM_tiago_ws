@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+
+  <world name="walls_blocks">
+
+    <!-- Light -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- ================= TABLE (BOX) ================= -->
+    <model name="table_box">
+      <static>true</static>
+
+      <!-- Table is 1.0m in front of TIAGo -->
+      <!-- Table height = 0.75m → z = 0.375 -->
+      <pose>1.0 0.0 0.375 0 0 0</pose>
+
+      <link name="link">
+
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>0.8 0.6 0.75</size>
+            </box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.8 0.6 0.75</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.4 0.3 1</ambient>
+            <diffuse>0.6 0.4 0.3 1</diffuse>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+    <!-- =============================================== -->
+
+  </world>
+</sdf>
+

@@ -63,7 +63,7 @@ class MpcController(Node):
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         # Create subscriptions to odom and path (global planner)
-        self.create_subscription(Odometry, '/mobile_base_controller/odom', self._odom_cb, 10)  # to get current state (gazebo odometry)
+        self.create_subscription(Odometry, '/ground_truth_odom', self._odom_cb, 10)  # to get current state (gazebo ground truth)
         self.create_subscription(Path, '/reference_path', self._path_cb, 10)  # to get the reference path
 
         # Create control timer
