@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
-from nav_msgs.msg import OccupancyGrid, Path
+from nav_msgs.msg import OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import PoseStamped, Pose, Point, PoseWithCovarianceStamped
 import math
 import random
@@ -14,21 +14,34 @@ class TreeNode:
         self.parent = None 
         self.cost = 0.0
     
-    # FIX 1: Explicitly name this "Squared" so we don't use it by accident
+    # Use squared distance for faster nearest neighbor search
     def distance_sq_to(self, other: 'TreeNode') -> float:
         dx = self.x - other.x
         dy = self.y - other.y
         return dx*dx + dy*dy
 
-    # FIX 2: We still need Real distance for Cost and Steps calculations
+    # Use real distance for cost and steps calculations
     def distance_to(self, other: 'TreeNode') -> float:
         return math.hypot(self.x - other.x, self.y - other.y)
 
 class RRTStarPlanner(Node):
+    """
+    RRT* Global Planner Node: receives map and start/goal poses, computes a global path using RRT* algorithm.
+    This algorithm only runs when a new goal is received.
+
+    Input topics: 
+    - /map : map data (OccupancyGrid)
+    - /mobile_base_controller/odom or /initialpose : start pose (given by Gazebo or clicked in rviz)
+    - /goal_pose : goal pose (clicked by user in rviz)
+
+    Output topics:
+    - /reference_path: computed global path (Path)
+    """
     def __init__(self):
         super().__init__('rrt_star_planner_node')
         self.get_logger().info("RRT* Global Planner Started.")
 
+        # Declare ROS params
         self.declare_parameter('max_iterations', 1000)
         self.declare_parameter('step_size', 1.0)
         self.declare_parameter('goal_sample_rate', 0.3)
@@ -40,6 +53,7 @@ class RRTStarPlanner(Node):
         self.start_pose = None
         self.inflated_map = None  # Cache inflated map for speed
         
+        # Latched QoS for map and path
         latched_qos = QoSProfile(
             depth=1,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
@@ -47,11 +61,12 @@ class RRTStarPlanner(Node):
         )
 
         self.create_subscription(OccupancyGrid, '/map', self.map_callback, latched_qos)
-        self.create_subscription(PoseStamped, '/amcl_pose', self.pose_callback, 10)
-        self.create_subscription(PoseWithCovarianceStamped, '/initialpose', self.initialpose_callback, 10)
+        self.create_subscription(Odometry, '/mobile_base_controller/odom', self.odom_callback, 10)
+        self.create_subscription(PoseWithCovarianceStamped, '/initialpose', self.odom_callback, 10)
         self.create_subscription(PoseStamped, '/goal_pose', self.goal_callback, 10)
         self.path_publisher = self.create_publisher(Path, '/reference_path', latched_qos)
         
+        self.current_odom = None
         self.get_logger().info("Waiting for map...")
 
     def map_callback(self, msg: OccupancyGrid):
@@ -60,28 +75,25 @@ class RRTStarPlanner(Node):
             self._inflate_map()
             self.get_logger().info("Map received and inflated.")
 
-    def pose_callback(self, msg: PoseStamped):
-        self.current_robot_pose = msg
-
-    def initialpose_callback(self, msg: PoseWithCovarianceStamped):
-        ps = PoseStamped()
-        ps.header = msg.header
-        ps.pose = msg.pose.pose
-        self.start_pose = ps
-        self.get_logger().info("Start pose set manually.")
+    def odom_callback(self, msg):
+        self.current_odom = msg
+        self.get_logger().debug("Current odom position updated.")
 
     def goal_callback(self, goal_msg: PoseStamped):
         if self.map_data is None:
             self.get_logger().warn("Map not received yet.")
             return
 
-        start = self.start_pose if self.start_pose else self.current_robot_pose
-        if start is None:
-            self.get_logger().warn("No start pose yet.")
+        if self.current_odom is None:
+            self.get_logger().warn("Current odom position not received yet.")
             return
 
-        self.get_logger().info("Starting RRT* Global Planner...")
-        path = self._rrt_star_search(start, goal_msg)
+        start_ps = PoseStamped()
+        start_ps.header = self.current_odom.header
+        start_ps.pose = self.current_odom.pose.pose
+
+        self.get_logger().info("New goal received. Starting RRT* from current position...")
+        path = self._rrt_star_search(start_ps, goal_msg)
         
         if path:
             self.publish_path(path)

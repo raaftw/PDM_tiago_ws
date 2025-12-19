@@ -19,6 +19,7 @@ source install/setup.bash
 
 **Always source in new terminals:**
 ```bash
+source /usr/share/gazebo/setup.bash
 source /opt/ros/humble/setup.bash
 source ~/tiago_public_ws/install/setup.bash
 source ~/PDM_tiago_ws/install/setup.bash
