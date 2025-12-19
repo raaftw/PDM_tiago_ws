@@ -31,7 +31,7 @@ class RRTStarPlanner(Node):
 
     Input topics: 
     - /map : map data (OccupancyGrid)
-    - /mobile_base_controller/odom or /initialpose : start pose (given by Gazebo or clicked in rviz)
+    - /ground_truth_odom or /initialpose : start pose (given by Gazebo or clicked in rviz)
     - /goal_pose : goal pose (clicked by user in rviz)
 
     Output topics:
@@ -61,7 +61,7 @@ class RRTStarPlanner(Node):
         )
 
         self.create_subscription(OccupancyGrid, '/map', self.map_callback, latched_qos)
-        self.create_subscription(Odometry, '/mobile_base_controller/odom', self.odom_callback, 10)
+        self.create_subscription(Odometry, '/ground_truth_odom', self.odom_callback, 10)
         self.create_subscription(PoseWithCovarianceStamped, '/initialpose', self.odom_callback, 10)
         self.create_subscription(PoseStamped, '/goal_pose', self.goal_callback, 10)
         self.path_publisher = self.create_publisher(Path, '/reference_path', latched_qos)
