@@ -41,7 +41,7 @@ setup(
         'console_scripts': [
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
-            'mpc_controller = pdm_test.mpc_controller:main',
+            'mpc_controller = pdm_test.local_planner:main',
             'obstacle_publisher=pdm_test.obstacle_publisher:main',
             'global_planner = pdm_test.global_planner:main',
             'ground_truth_republisher = pdm_test.ground_truth_republisher:main',

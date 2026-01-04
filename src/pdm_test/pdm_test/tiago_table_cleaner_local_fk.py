@@ -44,7 +44,7 @@ class TiagoTableCleanerLocalFK(Node):
 
         # Service entry
         self.create_service(Trigger, "/clean_table", self._srv_clean_table)
-'''
+        '''
         # Load URDF text (point this to your expanded URDF file)
         # If you have the expanded URDF on parameter /robot_description, you can also load from there.
         urdf_path = pathlib.Path.home() / "PDM_tiago_ws" / "src" / "tiago_description" / "expanded_tiago.urdf"
@@ -55,7 +55,7 @@ class TiagoTableCleanerLocalFK(Node):
             # Fallback: if you store a local copy, set the path here
             self.get_logger().warn(f"Failed to read URDF at {urdf_path}: {e}")
             self.urdf_text = ""
-'''
+        '''
         # Load URDF text from ROS parameter /robot_description
         self.declare_parameter("robot_description", "")
         self.urdf_text = self.get_parameter("robot_description").value
