@@ -8,14 +8,20 @@ class TiagoDifferentialDriveModel:
     Control: [v, omega]
     """
     
-    def __init__(self, dt: float = 0.1):
+    def __init__(self, dt: float = 0.1, 
+                    v_min: float = -0.5, v_max: float = 2.0, 
+                    omega_min: float = -2.0, omega_max: float = 2.0):
         """dt is the time step in seconds"""
         # Store dt, state_dim=3, control_dim=2
 
         self.dt = dt
         self.state_dim = 3
         self.control_dim = 2
-    
+
+        self.v_min, self.v_max = v_min, v_max
+        self.omega_min, self.omega_max = omega_min, omega_max
+
+
     def continuous_dynamics(self, state: np.ndarray, control: np.ndarray) -> np.ndarray:
         """Return [dx/dt, dy/dt, dtheta/dt]
         

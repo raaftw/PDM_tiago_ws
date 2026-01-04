@@ -9,6 +9,16 @@ from pdm_test.models.tiago_diff_drive_model import TiagoDifferentialDriveModel
 from scipy.optimize import minimize
 from std_msgs.msg import Float32MultiArray
 
+# ===========================================
+# ===========================================
+# ===========================================
+# NOTE: 
+# THIS VERSION IS OUTDATED, PLEASE LOOK AT local_planner.py 
+# THIS HAS TO BE DELETED LATER
+# ===========================================
+# ===========================================
+# ===========================================
+
 
 class MpcController(Node):
     """
@@ -24,7 +34,7 @@ class MpcController(Node):
     """
 
     def __init__(self):
-        super().__init__('mpc_controller')
+        super().__init__('mpc_controller_old')
 
         # Get parameters and store locally
         self.control_rate = float(self.declare_parameter('control_rate', 10.0).value)
@@ -208,75 +218,6 @@ class MpcController(Node):
       
       return x_ref_traj
 
-
-    # def _compute_cost(self, current_state, u_seq, x_ref_traj):
-    #   """Compute MPC cost WITHOUT terminal cost."""
-      
-    #   N = self.mpc_horizon
-    #   cost = 0.0
-      
-    #   # Simulate full trajectory using robot model
-    #   x_traj = self.robot_model.simulate_trajectory(current_state, u_seq)
-      
-    #   for k in range(N):
-    #       # Get predicted state at step k+1
-    #       x_next = x_traj[k + 1]
-          
-    #       # Tracking error against reference
-    #       x_ref_k = x_ref_traj[k]
-    #       error_state = x_next - x_ref_k
-    #       error_state[2] = self._wrap_to_pi(error_state[2])
-          
-    #       # State tracking cost
-    #       state_cost = (self.Q_x * error_state[0]**2 + 
-    #                     self.Q_y * error_state[1]**2 + 
-    #                     self.Q_theta * error_state[2]**2)
-          
-    #       # Control effort cost
-    #       v_k, omega_k = u_seq[k]
-    #       control_cost = self.R_v * v_k**2 + self.R_omega * omega_k**2
-          
-    #       cost += state_cost + control_cost
-      
-    #   return cost
-
-    # THIS USED TO WORK (SO KEEP IT)
-    # def _compute_mpc_control(self, state, ref_path):
-    #   """MPC controller: solve optimization, return first control."""
-      
-    #   # Extract reference trajectory
-    #   x_ref_traj = self._extract_reference_trajectory(state, ref_path)
-      
-    #   # Initial guess: constant forward motion
-    #   u_init = np.zeros((self.mpc_horizon, 2))
-    #   u_init[:, 0] = self.v_ref
-    #   u_init_flat = u_init.flatten()
-      
-    #   # Objective function
-    #   def objective(u_flat):
-    #       u_seq = u_flat.reshape((self.mpc_horizon, 2))
-    #       return self._compute_cost(state, u_seq, x_ref_traj)
-      
-    #   # Define bounds for each control
-    #   bounds = []
-    #   for k in range(self.mpc_horizon):
-    #       bounds.append((self.v_min, self.max_v))           # v bounds
-    #       bounds.append((-self.max_omega, self.max_omega))  # ω bounds
-      
-    #   # Solve
-    #   result = minimize(
-    #       objective,
-    #       u_init_flat,
-    #       method='SLSQP',
-    #       bounds=bounds,
-    #       options={'maxiter': 50}
-    #   )
-      
-    #   u_opt = result.x.reshape((self.mpc_horizon, 2))
-      
-    #   # Return first control input only (receding horizon)
-    #   return u_opt[0, 0], u_opt[0, 1]
-
     def _compute_mpc_control(self, state, ref_path):
       """
       MPC controller WITHOUT obstacle avoidance (for testing/baseline).
@@ -362,7 +303,6 @@ class MpcController(Node):
 
         return np.array(points)
 
-
     def _compute_control_mpc_avoid(self, state, path_np):
       if path_np is None:
           return 0.0, 0.0
@@ -375,48 +315,69 @@ class MpcController(Node):
       
       # Decision variables: [v_0, omega_0, v_1, omega_1, ..., v_{H-1}, omega_{H-1}]
       u0 = np.zeros(2 * H)
+
       u0[::2] = self.v_ref  # Initialize v values to v_ref
-      
-      def total_cost(u_flat):
-          x, y, th = state
-          traj_xy = []
-          cost = 0.0
-          
-          for k in range(H):
-              v_k = float(u_flat[2*k])
-              omega_k = float(u_flat[2*k + 1])
-              
-              # Dynamics
-              x += v_k * math.cos(th) * self.dt
-              y += v_k * math.sin(th) * self.dt
-              th = self._wrap_to_pi(th + omega_k * self.dt)
-              traj_xy.append((x, y))
-              
-              # Tracking cost
-              dx, dy = x - targets[k,0], y - targets[k,1]
-              dth = self._wrap_to_pi(th - targets[k,2])
-              cost += self.Q_x*dx*dx + self.Q_y*dy*dy + self.Q_theta*dth*dth
-              
-              # Control effort
-              # cost += self.R_v * v_k**2 + self.R_omega * omega_k**2
-              cost += self.R_v * (v_k - self.v_ref)**2 + self.R_omega * omega_k**2
-          
-          # Obstacle cost
-          cost += self._obstacle_cost(traj_xy)
-          return cost
-      
-      # Bounds: alternating v and omega
-      bounds = [(self.v_min, self.max_v), (-self.max_omega, self.max_omega)] * H
-      
-      res = minimize(total_cost, u0, bounds=bounds, method='SLSQP', options={'maxiter': self.optimizer_maxiter})
-      
-      if res.success:
-          v_cmd = float(res.x[0])
-          omega_cmd = float(res.x[1])
-      else:
-          v_cmd, omega_cmd = 0.0, 0.0
-      
+
+      obstacle_hard_coded_coordinates = (2.54, 2.54)
+
       return v_cmd, omega_cmd
+
+
+
+    # def _compute_control_mpc_avoid(self, state, path_np):
+    #   if path_np is None:
+    #       return 0.0, 0.0
+    #   if not self.obstacles:
+    #       # No obstacles detected, use standard MPC
+    #       return self._compute_mpc_control(state, path_np)     
+       
+    #   H = self.mpc_horizon
+    #   targets = self._extract_reference_trajectory(state, path_np)
+      
+    #   # Decision variables: [v_0, omega_0, v_1, omega_1, ..., v_{H-1}, omega_{H-1}]
+    #   u0 = np.zeros(2 * H)
+    #   u0[::2] = self.v_ref  # Initialize v values to v_ref
+      
+    #   def total_cost(u_flat):
+    #       x, y, th = state
+    #       traj_xy = []
+    #       cost = 0.0
+          
+    #       for k in range(H):
+    #           v_k = float(u_flat[2*k])
+    #           omega_k = float(u_flat[2*k + 1])
+              
+    #           # Dynamics
+    #           x += v_k * math.cos(th) * self.dt
+    #           y += v_k * math.sin(th) * self.dt
+    #           th = self._wrap_to_pi(th + omega_k * self.dt)
+    #           traj_xy.append((x, y))
+              
+    #           # Tracking cost
+    #           dx, dy = x - targets[k,0], y - targets[k,1]
+    #           dth = self._wrap_to_pi(th - targets[k,2])
+    #           cost += self.Q_x*dx*dx + self.Q_y*dy*dy + self.Q_theta*dth*dth
+              
+    #           # Control effort
+    #           # cost += self.R_v * v_k**2 + self.R_omega * omega_k**2
+    #           cost += self.R_v * (v_k - self.v_ref)**2 + self.R_omega * omega_k**2
+          
+    #       # Obstacle cost
+    #       cost += self._obstacle_cost(traj_xy)
+    #       return cost
+      
+    #   # Bounds: alternating v and omega
+    #   bounds = [(self.v_min, self.max_v), (-self.max_omega, self.max_omega)] * H
+      
+    #   res = minimize(total_cost, u0, bounds=bounds, method='SLSQP', options={'maxiter': self.optimizer_maxiter})
+      
+    #   if res.success:
+    #       v_cmd = float(res.x[0])
+    #       omega_cmd = float(res.x[1])
+    #   else:
+    #       v_cmd, omega_cmd = 0.0, 0.0
+      
+    #   return v_cmd, omega_cmd
     
     def _obstacle_cost(self, traj_xy):
       cost = 0.0
