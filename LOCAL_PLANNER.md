@@ -1,5 +1,13 @@
 # Local Planner
 
+To run most updated demo:
+
+```bash
+ros2 launch pdm_test mpc_combined.launch.py world_name:=walls_blocks
+```
+
+---------------------------
+
 In this file there is an explanation and instructions about the current progress of the local planner. 
 
 ## Table of Contents
