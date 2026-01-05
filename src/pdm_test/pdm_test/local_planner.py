@@ -9,9 +9,6 @@ from pdm_test.models.tiago_diff_drive_model import TiagoDifferentialDriveModel
 from scipy.optimize import minimize
 from sensor_msgs.msg import LaserScan
 import time
-# from rclpy.qos import SensorDataQoS
-
-# import cvxpy as cp
 
 
 class MpcController(Node):
@@ -22,19 +19,19 @@ class MpcController(Node):
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         
         # MPC-specific parameters
-        self.Q_x = float(self.declare_parameter('Q_x', 80.0).value)
-        self.Q_y = float(self.declare_parameter('Q_y', 80.0).value)
+        self.Q_x = float(self.declare_parameter('Q_x', 60.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 60.0).value)
         self.Q_theta = float(self.declare_parameter('Q_theta', 0.0).value)
 
         self.R_v = float(self.declare_parameter('R_v', 0.4).value)       
-        self.R_omega = float(self.declare_parameter('R_omega', 0.4).value)
+        self.R_omega = float(self.declare_parameter('R_omega', 0.2).value)
 
-        self.Q_f_x = float(self.declare_parameter('Q_f_x', 0.0).value)
-        self.Q_f_y = float(self.declare_parameter('Q_f_y', 0.0).value)
+        self.Q_f_x = float(self.declare_parameter('Q_f_x', 50.0).value)
+        self.Q_f_y = float(self.declare_parameter('Q_f_y', 50.0).value)
         self.Q_f_theta = float(self.declare_parameter('Q_f_theta', 0.0).value)
 
         self.mpc_horizon = int(self.declare_parameter('mpc_horizon', 15).value)
-        self.optimizer_maxiter = int(self.declare_parameter('optimizer_maxiter', 100).value)
+        self.optimizer_maxiter = int(self.declare_parameter('optimizer_maxiter', 200).value)
 
         self._scan_points_buffer = []
 
@@ -190,7 +187,7 @@ class MpcController(Node):
             angle += msg.angle_increment
         
         self._scan_points_buffer = scan_points
-        self.get_logger().info(f'Laser scan processed: {valid_count} valid points converted to obstacles')
+        self.get_logger().debug(f'Laser scan processed: {valid_count} valid points converted to obstacles')
 
     # ------------------------ MPC CONTROL -----------------------
 
@@ -230,7 +227,7 @@ class MpcController(Node):
         # DEBUG: Check scan points
         scan_points = self._scan_points_buffer if hasattr(self, '_scan_points_buffer') else []
         if len(scan_points) > 0:
-            self.get_logger().info(f'Obstacles detected: {len(scan_points)} points')
+            self.get_logger().debug(f'Obstacles detected: {len(scan_points)} points')
             closest_obstacle = min(scan_points, key=lambda p: np.sqrt((p[0]-state[0])**2 + (p[1]-state[1])**2))
             dist_to_closest = np.sqrt((closest_obstacle[0]-state[0])**2 + (closest_obstacle[1]-state[1])**2)
             self.get_logger().info(f'Closest obstacle: {dist_to_closest:.2f}m away at ({closest_obstacle[0]:.2f}, {closest_obstacle[1]:.2f})')
@@ -256,7 +253,9 @@ class MpcController(Node):
 
             backward_penalty = 100.0  # Factor to penalize backward motion
             cost += self.R_v * U[0, k]**2  # Base velocity cost
-            cost += backward_penalty * ca.fmax(0, -U[0, k])**2  # Extra penalty when v < 0
+            cost += 10.0 * (U[0, k] - 0.5)**2  # penalize deviation from v_ref
+
+            # cost += backward_penalty * ca.fmax(0, -U[0, k])**2  # Extra penalty when v < 0
 
             cost += self.R_omega * U[1, k]**2
         
@@ -266,22 +265,21 @@ class MpcController(Node):
             dy = ref_traj[k+1,1] - ref_traj[k,1]
             ref_heading = ca.atan2(dy, dx + 1e-6)
             heading_error = X[2,k] - ref_heading
-            cost += 5.0 * heading_error**2 
+            cost += 8.0 * heading_error**2 
 
         # Smoothness cost (to avoid wobbling)
         for k in range(N - 1):
             v_change = U[0, k+1] - U[0, k]
             omega_change = U[1, k+1] - U[1, k]
-            cost += 1.0 * v_change**2         # tune 0.5–2.0
+            cost += 0.0 * v_change**2         # tune 0.5–2.0
             cost += 2.0 * omega_change**2     # tune 2.0–6.0
 
-        # # Terminal cost
-        # final_error = X[:, N] - ref_traj[-1, :].reshape(3, 1)
-        # cost += self.Q_f_x * final_error[0]**2
-        # cost += self.Q_f_y * final_error[1]**2
-        # cost += self.Q_f_theta * final_error[2]**2
+        # Terminal cost
+        final_error = X[:, N] - ref_traj[-1, :].reshape(3, 1)
+        cost += self.Q_f_x * final_error[0]**2
+        cost += self.Q_f_y * final_error[1]**2
         
-        opti.minimize(cost)
+        
         
         # ==================== CONSTRAINTS ====================
         
@@ -310,7 +308,8 @@ class MpcController(Node):
         opti.subject_to(U[1, :] >= -self.max_omega)
         opti.subject_to(U[1, :] <= self.max_omega)
 
-        d_safe = 0.50  # safety distance in meters
+        d_safe = 0.35  # safety distance in meters
+        d_preferred = 0.6  # preferred distance in meters
         scan_points = self._scan_points_buffer if hasattr(self, '_scan_points_buffer') else []
         
 
@@ -320,6 +319,8 @@ class MpcController(Node):
             distances_to_robot.sort(key=lambda x: x[0])
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  # Top 3 closest
             
+            obstacle_penalty_weight = 30.0  # tune: 5–20
+
             for k in range(N + 1):
                 min_dist = None
                 for px, py in closest_n_obstacles:
@@ -332,8 +333,16 @@ class MpcController(Node):
                 if min_dist is not None:
                     opti.subject_to(min_dist >= d_safe)
 
+                    # Soft penalty for preferred distance
+                    violation = ca.fmax(0, d_preferred - min_dist)
+                    cost += obstacle_penalty_weight * violation**2
         
+        
+
         # ==================== SOLVE ====================
+
+        opti.minimize(cost)
+
         opts = {
             'ipopt.print_level': 0,
             'print_time': 0,
