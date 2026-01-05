@@ -19,15 +19,15 @@ class MpcController(Node):
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         
         # MPC-specific parameters
-        self.Q_x = float(self.declare_parameter('Q_x', 60.0).value)
-        self.Q_y = float(self.declare_parameter('Q_y', 60.0).value)
+        self.Q_x = float(self.declare_parameter('Q_x', 30.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 30.0).value)
         self.Q_theta = float(self.declare_parameter('Q_theta', 0.0).value)
 
-        self.R_v = float(self.declare_parameter('R_v', 0.4).value)       
-        self.R_omega = float(self.declare_parameter('R_omega', 0.2).value)
+        self.R_v = float(self.declare_parameter('R_v', 0.6).value)       
+        self.R_omega = float(self.declare_parameter('R_omega', 0.1).value)
 
-        self.Q_f_x = float(self.declare_parameter('Q_f_x', 50.0).value)
-        self.Q_f_y = float(self.declare_parameter('Q_f_y', 50.0).value)
+        self.Q_f_x = float(self.declare_parameter('Q_f_x', 200.0).value)
+        self.Q_f_y = float(self.declare_parameter('Q_f_y', 200.0).value)
         self.Q_f_theta = float(self.declare_parameter('Q_f_theta', 0.0).value)
 
         self.mpc_horizon = int(self.declare_parameter('mpc_horizon', 15).value)
@@ -167,23 +167,27 @@ class MpcController(Node):
         robot_y = self.current_state[1]
         robot_theta = self.current_state[2]
         
+        # Field of view: in robot frame (front half)
+        fov_min = -np.pi / 4 
+        fov_max = np.pi / 4
+        
         for r in msg.ranges:
             
-            if r > 0.27 and r >= msg.range_min and r <= msg.range_max:
-                # Point in robot frame
-                px_robot = r * np.cos(angle)
-                py_robot = r * np.sin(angle)
-                
-                # Transform to map frame
-                cos_theta = np.cos(robot_theta)
-                sin_theta = np.sin(robot_theta)
-                
-                px_map = robot_x + cos_theta * px_robot - sin_theta * py_robot
-                py_map = robot_y + sin_theta * px_robot + cos_theta * py_robot
-                
-                scan_points.append((px_map, py_map))
-                valid_count += 1
-            
+            if r > 0.3 and r >= msg.range_min and r <= msg.range_max:
+                # Check if this point is in the front FOV
+                if fov_min <= angle <= fov_max:
+                    px_robot = r * np.cos(angle)
+                    py_robot = r * np.sin(angle)
+                    
+                    cos_theta = np.cos(robot_theta)
+                    sin_theta = np.sin(robot_theta)
+                    
+                    px_map = robot_x + cos_theta * px_robot - sin_theta * py_robot
+                    py_map = robot_y + sin_theta * px_robot + cos_theta * py_robot
+                    
+                    scan_points.append((px_map, py_map))
+                    valid_count += 1
+
             angle += msg.angle_increment
         
         self._scan_points_buffer = scan_points
@@ -253,7 +257,7 @@ class MpcController(Node):
 
             backward_penalty = 100.0  # Factor to penalize backward motion
             cost += self.R_v * U[0, k]**2  # Base velocity cost
-            cost += 10.0 * (U[0, k] - 0.5)**2  # penalize deviation from v_ref
+            # cost += 1.0 * (U[0, k] - 0.5)**2  # penalize deviation from v_ref (0m5)
 
             # cost += backward_penalty * ca.fmax(0, -U[0, k])**2  # Extra penalty when v < 0
 
@@ -265,14 +269,14 @@ class MpcController(Node):
             dy = ref_traj[k+1,1] - ref_traj[k,1]
             ref_heading = ca.atan2(dy, dx + 1e-6)
             heading_error = X[2,k] - ref_heading
-            cost += 8.0 * heading_error**2 
+            cost += 5.0 * heading_error**2 
 
-        # Smoothness cost (to avoid wobbling)
-        for k in range(N - 1):
-            v_change = U[0, k+1] - U[0, k]
-            omega_change = U[1, k+1] - U[1, k]
-            cost += 0.0 * v_change**2         # tune 0.5–2.0
-            cost += 2.0 * omega_change**2     # tune 2.0–6.0
+        # # Smoothness cost (to avoid wobbling)
+        # for k in range(N - 1):
+        #     v_change = U[0, k+1] - U[0, k]
+        #     omega_change = U[1, k+1] - U[1, k]
+        #     cost += 0.0 * v_change**2         # tune 0.5–2.0
+        #     cost += 2.0 * omega_change**2     # tune 2.0–6.0
 
         # Terminal cost
         final_error = X[:, N] - ref_traj[-1, :].reshape(3, 1)
@@ -319,7 +323,7 @@ class MpcController(Node):
             distances_to_robot.sort(key=lambda x: x[0])
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  # Top 3 closest
             
-            obstacle_penalty_weight = 30.0  # tune: 5–20
+            obstacle_penalty_weight = 40.0  # tune: 5–20
 
             for k in range(N + 1):
                 min_dist = None
