@@ -26,8 +26,8 @@ class MpcController(Node):
         self.R_v = float(self.declare_parameter('R_v', 0.6).value)       
         self.R_omega = float(self.declare_parameter('R_omega', 0.1).value)
 
-        self.Q_f_x = float(self.declare_parameter('Q_f_x', 200.0).value)
-        self.Q_f_y = float(self.declare_parameter('Q_f_y', 200.0).value)
+        self.Q_f_x = float(self.declare_parameter('Q_f_x', 80.0).value)
+        self.Q_f_y = float(self.declare_parameter('Q_f_y', 80.0).value)
         self.Q_f_theta = float(self.declare_parameter('Q_f_theta', 0.0).value)
 
         self.mpc_horizon = int(self.declare_parameter('mpc_horizon', 15).value)
