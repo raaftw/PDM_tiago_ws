@@ -162,62 +162,62 @@ src/pdm_test/
 
 ---
 
- SLAM Mapping and Navigation
+## SLAM Mapping and Navigation
 
- Launch simulation with SLAM enabled
- Start TIAGo in Gazebo with SLAM and the navigation stack enabled:
+### 1. Launch simulation with SLAM enabled
+Start TIAGo in Gazebo with SLAM and the navigation stack enabled:
 
- ros2 launch tiago_gazebo tiago_gazebo.launch.py \
-   is_public_sim:=True \
-   world_name:=walls \
-   navigation:=True \
-   slam:=True
+```bash
+ros2 launch tiago_gazebo tiago_gazebo.launch.py \
+  is_public_sim:=True \
+  world_name:=walls \
+  navigation:=True \
+  slam:=True
+```
 
- This launches:
- - Gazebo simulation
- - RViz visualisation
- - SLAM for online map building
- - Nav2 for planning (can be used after mapping)
+This launches:
+- Gazebo simulation
+- RViz visualisation
+- SLAM for online map building
+- Nav2 for planning (can be used after mapping)
 
- --------------------------------------------------
+### 2. Drive the robot (keyboard teleoperation)
+In a separate terminal, run:
 
- Drive the robot (keyboard teleoperation)
- In a separate terminal, run:
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+```
 
- ros2 run teleop_twist_keyboard teleop_twist_keyboard
+Use the keyboard controls shown in the terminal to move the robot around the environment while SLAM builds the map.
 
- Use the keyboard controls shown in the terminal to move the robot around the
- environment while SLAM builds the map.
+### 3. Save the generated map
+When the map looks complete in RViz, save it using:
 
- --------------------------------------------------
+```bash
+ros2 run nav2_map_server map_saver_cli -f my_map
+```
 
- Save the generated map
- When the map looks complete in RViz, save it using:
+This creates two files in the current directory:
+- `my_map.yaml`
+- `my_map.pgm`
 
- ros2 run nav2_map_server map_saver_cli -f my_map
+### 4. Use the saved map for navigation (no SLAM)
+To run navigation on a previously saved map, relaunch the simulation with SLAM disabled and the map loaded:
 
- This creates:
- - my_map.yaml
- - my_map.pgm
+```bash
+ros2 launch tiago_gazebo tiago_gazebo.launch.py \
+  is_public_sim:=True \
+  world_name:=walls \
+  navigation:=True \
+  slam:=False \
+  map:=/path/to/my_map.yaml
+```
 
- in the current directory.
+You can now:
+- Send navigation goals in RViz
+- Or continue manual control using keyboard teleop
 
- --------------------------------------------------
-
- Use the saved map for navigation (no SLAM)
- To run navigation on a previously saved map, relaunch the simulation with SLAM
- disabled and the map loaded:
-
- ros2 launch tiago_gazebo tiago_gazebo.launch.py \
-   is_public_sim:=True \
-   world_name:=walls \
-   navigation:=True \
-   slam:=False \
-   map:=/path/to/my_map.yaml
-
- You can now:
- - Send navigation goals in RViz
- - Or continue manual control using keyboard teleop
+---
 
 ## Troubleshooting
 
