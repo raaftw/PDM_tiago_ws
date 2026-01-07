@@ -1,0 +1,55 @@
+# Table definitions for walls_blocks world
+# Extracted from walls_blocks.world file
+# All tables are 0.5m x 0.5m squares
+
+tables:
+  - id: "table_1"
+    name: "unit_box"
+    center: [-2.5, 2.5]
+    width: 0.5
+    height: 0.5
+    # Corners in map frame (counter-clockwise from bottom-left)
+    corners:
+      - [-2.75, 2.25]  # bottom-left
+      - [-2.25, 2.25]  # bottom-right
+      - [-2.25, 2.75]  # top-right
+      - [-2.75, 2.75]  # top-left
+    
+  - id: "table_2"
+    name: "unit_box_0"
+    center: [2.5, 2.5]
+    width: 0.5
+    height: 0.5
+    corners:
+      - [2.25, 2.25]   # bottom-left
+      - [2.75, 2.25]   # bottom-right
+      - [2.75, 2.75]   # top-right
+      - [2.25, 2.75]   # top-left
+    
+  - id: "table_3"
+    name: "unit_box_1"
+    center: [-2.5, -2.5]
+    width: 0.5
+    height: 0.5
+    corners:
+      - [-2.75, -2.75]  # bottom-left
+      - [-2.25, -2.75]  # bottom-right
+      - [-2.25, -2.25]  # top-right
+      - [-2.75, -2.25]  # top-left
+    
+  - id: "table_4"
+    name: "unit_box_2"
+    center: [2.5, -2.5]
+    width: 0.5
+    height: 0.5
+    corners:
+      - [2.25, -2.75]  # bottom-left
+      - [2.75, -2.75]  # bottom-right
+      - [2.75, -2.25]  # top-right
+      - [2.25, -2.25]  # top-left
+
+# Notes:
+# - Coordinates are in the map frame matching walls_blocks_map.yaml
+# - All tables are axis-aligned (no rotation)
+# - Height refers to Y dimension, width to X dimension
+# - Z-coordinate (table height from ground) is 0.5m in Gazebo

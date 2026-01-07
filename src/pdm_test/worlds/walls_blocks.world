@@ -362,7 +362,7 @@
       </light>
     </state>
     <model name='unit_box'>
-      <pose>-2.48929 2.53081 0.5 0 -0 0</pose>
+      <pose>-2.5 2.5 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
           <mass>1</mass>
@@ -415,7 +415,7 @@
       </link>
     </model>
     <model name='unit_box_0'>
-      <pose>2.50273 2.4992 0.5 0 -0 0</pose>
+      <pose>2.5 2.5 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
           <mass>1</mass>
@@ -468,7 +468,7 @@
       </link>
     </model>
     <model name='unit_box_1'>
-      <pose>-2.47624 -2.4835 0.5 0 -0 0</pose>
+      <pose>-2.5 -2.5 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
           <mass>1</mass>
@@ -521,7 +521,7 @@
       </link>
     </model>
     <model name='unit_box_2'>
-      <pose>2.53913 -2.53554 0.5 0 -0 0</pose>
+      <pose>2.5 -2.5 0.5 0 -0 0</pose>
       <link name='link'>
         <inertial>
           <mass>1</mass>
