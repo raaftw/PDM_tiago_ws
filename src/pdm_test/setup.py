@@ -50,7 +50,11 @@ setup(
             'tiago_table_cleaner_fk = pdm_test.tiago_table_cleaner_fk:main',
             'tiago_table_cleaner_local_fk = pdm_test.tiago_table_cleaner_local_fk:main',
             'tiago_table_cleaner_rrt = pdm_test.tiago_table_cleaner_rrt:main',
+            'tiago_table_cleaner_rrt = pdm_test.tiago_table_cleaner_rrt:main',
             'table_detector = pdm_test.table_detector:main',
+            'tiago_table_cleaner_rrt_ik = pdm_test.tiago_table_cleaner_rrt_ik:main',
+            'ik_debug_client = pdm_test.ik_debug_client:main',
+            'tiago_table_cleaner_rrt_visualization_ik = pdm_test.tiago_table_cleaner_rrt_visualization_ik:main',
         ],
     },
 )
