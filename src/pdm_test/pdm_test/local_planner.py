@@ -45,6 +45,8 @@ class MpcController(Node):
         # Create publisher for cmd_vel
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
+        # Performance metrics are handled by standalone nodes (e.g., metrics_min_distance)
+
         # Create subscriptions to odom and path (global planner) and laser scan (obstacle avoidance)
         self.create_subscription(Odometry, '/ground_truth_odom', self._odom_cb, 10)  # to get current state (gazebo ground truth)
         self.create_subscription(Path, '/reference_path', self._path_cb, 10)  # to get the reference path
@@ -88,6 +90,8 @@ class MpcController(Node):
         self.get_logger().debug(f'Publishing v={v:.3f}, omega={omega:.3f}')
 
         self.cmd_pub.publish(twist_msg)
+
+        # Metrics publication handled by dedicated nodes
 
     def _odom_cb(self, msg: Odometry):
         """
@@ -192,6 +196,7 @@ class MpcController(Node):
         
         self._scan_points_buffer = scan_points
         self.get_logger().debug(f'Laser scan processed: {valid_count} valid points converted to obstacles')
+
 
     # ------------------------ MPC CONTROL -----------------------
 
