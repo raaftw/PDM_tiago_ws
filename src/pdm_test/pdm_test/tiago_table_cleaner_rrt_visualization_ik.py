@@ -60,11 +60,12 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
         # --- MoveIt config (matches your working CLI IK/FK tests) ---
         self.moveit_group_name = "arm"
-        self.moveit_ee_link = "gripper_tool_link" #"arm_7_link" #"arm_tool_link"
+        self.moveit_ee_link = "arm_7_link" #"gripper_tool_link" #"arm_7_link" #"arm_tool_link"
         self.planning_frame = "base_link"
 
         # --- Poses ---
-        self.preclean_q: List[float] = [1.0, 1.0, 0.0, 2.2, -1.2, 0.7, 0.5]
+        #self.preclean_q: List[float] = [1.0, 1.0, 0.0, 2.2, -1.2, 0.7, 0.5]
+        self.preclean_q: List[float] = [0.50, -1.34, -0.48, 1.94, -1.49, 1.37, 0.00]
         self.rest_q: List[float] = [0.50, -1.34, -0.48, 1.94, -1.49, 1.37, 0.00]
 
         # Cartesian waypoints (base_link)
@@ -84,13 +85,39 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             (x0, y0, z),
         ]
         '''
+        
         self.cartesian_waypoints: List[Tuple[float, float, float]] = [
-            (0.6, -0.1, 0.75),
-            (0.8, -0.1, 0.72),
-            (0.8, 0.2, 0.72),
-            (0.6, 0.2, 0.72),
-            (0.6, -0.1, 0.75),
+            (0.5, -0.2, 0.80),
+            (0.6, -0.2, 0.80),
+            (0.7, -0.2, 0.80),
+            (0.8, -0.2, 0.80),
+            (0.8, -0.1, 0.80),
+            (0.8,  0.0, 0.80),
+            (0.8,  0.1, 0.80),
+            (0.8,  0.2, 0.80),
+            (0.8,  0.2, 0.80),
+            (0.7,  0.2, 0.80),
+            (0.6,  0.2, 0.80),
+            (0.5,  0.1, 0.80),
+            (0.5,  0.0, 0.80),
         ]
+        '''
+        self.cartesian_waypoints: List[Tuple[float, float, float]] = [
+            (0.5, -0.2, 0.65),
+            (0.6, -0.2, 0.65),
+            (0.7, -0.2, 0.65),
+            (0.8, -0.2, 0.65),
+            (0.8, -0.1, 0.65),
+            (0.8,  0.0, 0.65),
+            (0.8,  0.1, 0.65),
+            (0.8,  0.2, 0.65),
+            (0.7,  0.2, 0.65),
+            (0.6,  0.2, 0.65),
+            (0.5,  0.2, 0.65),
+            (0.5,  0.1, 0.65),
+            (0.5,  0.0, 0.65),
+        ]
+        '''
         '''
         self.cartesian_waypoints: List[Tuple[float, float, float]] = [
             (0.6, 0.85, 0.0),

@@ -20,15 +20,25 @@ setup(
         (os.path.join('share', package_name, 'worlds'),
          glob('worlds/*.world')),
 
-        # install all launch files (py, xml) and rviz configs located in launch/
+        # install all launch files (including nested folders)
         (os.path.join('share', package_name, 'launch'),
-         glob('launch/*')),
+         glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/*.launch.xml')),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/*.py')),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/**/*.launch.py', recursive=True)),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/**/*.launch.xml', recursive=True)),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/**/*.py', recursive=True)),
 
-        # install maps (yaml + pgm) from workspace src/maps into package share
+        # install maps from package-local maps/ (recommended)
         (os.path.join('share', package_name, 'maps'),
-         glob(os.path.join('..', 'maps', '*.yaml'))),
+         glob('maps/*.yaml')),
         (os.path.join('share', package_name, 'maps'),
-         glob(os.path.join('..', 'maps', '*.pgm'))),
+         glob('maps/*.pgm')),
     ],
     install_requires=['setuptools', 'numpy', 'scipy'],
     zip_safe=True,
@@ -42,14 +52,13 @@ setup(
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
             'mpc_controller = pdm_test.local_planner:main',
-            'obstacle_publisher=pdm_test.obstacle_publisher:main',
+            'obstacle_publisher = pdm_test.obstacle_publisher:main',
             'global_planner = pdm_test.global_planner:main',
             'ground_truth_republisher = pdm_test.ground_truth_republisher:main',
             'tiago_table_cleaner = pdm_test.tiago_table_cleaner:main',
             'tiago_table_cleaner_simple = pdm_test.tiago_table_cleaner_simple:main',
             'tiago_table_cleaner_fk = pdm_test.tiago_table_cleaner_fk:main',
             'tiago_table_cleaner_local_fk = pdm_test.tiago_table_cleaner_local_fk:main',
-            'tiago_table_cleaner_rrt = pdm_test.tiago_table_cleaner_rrt:main',
             'tiago_table_cleaner_rrt = pdm_test.tiago_table_cleaner_rrt:main',
             'table_detector = pdm_test.table_detector:main',
             'tiago_table_cleaner_rrt_ik = pdm_test.tiago_table_cleaner_rrt_ik:main',
@@ -58,3 +67,4 @@ setup(
         ],
     },
 )
+
