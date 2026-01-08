@@ -22,7 +22,7 @@ def generate_launch_description():
     
     declare_world_name = DeclareLaunchArgument(
         'world_name',
-        default_value='cafe',
+        default_value='walls_blocks',
         description='World name (without .world extension). Map will be [worldname]_map.yaml'
     )
 
@@ -128,6 +128,13 @@ def generate_launch_description():
         output='screen',
     )
 
+    cleaner_node = Node(
+        package='pdm_test',
+        executable='tiago_table_cleaner_rrt',
+        name='tiago_table_cleaner_rrt',
+        output='screen',
+    )
+
     # ==================== GROUND TRUTH REPUBLISHER ====================
     # Republish /ground_truth_odom as /ground_truth_pose for RViz visualization
 
@@ -159,6 +166,8 @@ def generate_launch_description():
 
     # Add command 3: MPC Controller
     ld.add_action(mpc_node)
+
+    ld.add_action(cleaner_node)
 
     # Add ground truth republisher
     ld.add_action(ground_truth_republisher_node)

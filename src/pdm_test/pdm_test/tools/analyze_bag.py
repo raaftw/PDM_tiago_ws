@@ -1,6 +1,7 @@
 import argparse
 import os
 import json
+import math
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -105,6 +106,22 @@ def extract_float_series(series: List[Tuple[float, object]], attr: str = 'data')
     return t, v
 
 
+def quaternion_to_yaw(qx: float, qy: float, qz: float, qw: float) -> float:
+    """Convert quaternion to yaw angle in radians."""
+    siny_cosp = 2.0 * (qw * qz + qx * qy)
+    cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz)
+    return math.atan2(siny_cosp, cosy_cosp)
+
+
+def normalize_angle(angle: float) -> float:
+    """Normalize angle to [-pi, pi]."""
+    while angle > math.pi:
+        angle -= 2.0 * math.pi
+    while angle < -math.pi:
+        angle += 2.0 * math.pi
+    return angle
+
+
 def extract_odom_positions(series: List[Tuple[float, object]]) -> Tuple[List[float], List[float], List[float]]:
     t: List[float] = []
     xs: List[float] = []
@@ -119,6 +136,30 @@ def extract_odom_positions(series: List[Tuple[float, object]]) -> Tuple[List[flo
         except Exception:
             continue
     return t, xs, ys
+
+
+def extract_odom_full(series: List[Tuple[float, object]]) -> Tuple[List[float], List[float], List[float], List[float]]:
+    """Extract time, x, y, and yaw from odometry."""
+    t: List[float] = []
+    xs: List[float] = []
+    ys: List[float] = []
+    yaws: List[float] = []
+    for ts, msg in series:
+        try:
+            x = float(msg.pose.pose.position.x)
+            y = float(msg.pose.pose.position.y)
+            qx = float(msg.pose.pose.orientation.x)
+            qy = float(msg.pose.pose.orientation.y)
+            qz = float(msg.pose.pose.orientation.z)
+            qw = float(msg.pose.pose.orientation.w)
+            yaw = quaternion_to_yaw(qx, qy, qz, qw)
+            xs.append(x)
+            ys.append(y)
+            yaws.append(yaw)
+            t.append(ts)
+        except Exception:
+            continue
+    return t, xs, ys, yaws
 
 
 def extract_cmd_vel(series: List[Tuple[float, object]]) -> Tuple[List[float], List[float], List[float]]:
@@ -187,7 +228,7 @@ def analyze_bag(bag_path: str, out_prefix: str) -> Dict[str, object]:
     err_stats = series_stats(err_vals)
 
     # Odom path length and duration
-    t_odom, xs, ys = extract_odom_positions(series.get('/ground_truth_odom', []))
+    t_odom, xs, ys, yaws = extract_odom_full(series.get('/ground_truth_odom', []))
     length = path_length(xs, ys)
     duration = (t_odom[-1] - t_odom[0]) if len(t_odom) >= 2 else (t_obs[-1] - t_obs[0]) if len(t_obs) >= 2 else float('nan')
 
@@ -209,14 +250,96 @@ def analyze_bag(bag_path: str, out_prefix: str) -> Dict[str, object]:
     if t_cmd:
         write_csv(f"{out_prefix}_cmd_vel.csv", ['t', 'linear_x', 'angular_z'], list(zip(t_cmd, vxs, wzs)))
 
+    # Detect collision: minimum distance below 0.1m threshold
+    collision_threshold = 0.1  # meters
+    collision_detected = False
+    min_distance_value = float('inf')
+    if obs_vals:
+        min_distance_value = min(obs_vals)
+        collision_detected = min_distance_value < collision_threshold
+
+    # Goal accuracy metrics (compare final state to goal)
+    # Try to read goal from meta.json in parent directory
+    goal_position_error = None
+    goal_heading_error_rad = None
+    goal_heading_error_deg = None
+    final_x = None
+    final_y = None
+    final_heading = None
+    
+    if xs and ys and yaws:
+        final_x = float(xs[-1])
+        final_y = float(ys[-1])
+        final_heading = float(yaws[-1])
+        
+        # Try to load goal from meta.json
+        bag_dir = os.path.dirname(bag_path)
+        run_dir = os.path.dirname(bag_dir) if 'bag' in os.path.basename(bag_dir) else bag_dir
+        meta_path = os.path.join(run_dir, 'meta.json')
+        
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path, 'r') as f:
+                    meta = json.load(f)
+                
+                # Get goal from launch command (check for goal_location or goal_x/y/theta)
+                goal_x = None
+                goal_y = None
+                goal_theta = None
+                
+                if 'launch_cmd' in meta:
+                    cmd_str = ' '.join(meta['launch_cmd'])
+                    # Extract goal_x, goal_y, goal_theta from command
+                    import re
+                    x_match = re.search(r'goal_x:=([\-\d.]+)', cmd_str)
+                    y_match = re.search(r'goal_y:=([\-\d.]+)', cmd_str)
+                    theta_match = re.search(r'goal_theta:=([\-\d.]+)', cmd_str)
+                    
+                    if x_match and y_match and theta_match:
+                        goal_x = float(x_match.group(1))
+                        goal_y = float(y_match.group(1))
+                        goal_theta = float(theta_match.group(1))
+                    else:
+                        # Try to parse goal_location
+                        loc_match = re.search(r'goal_location:=(\w+)', cmd_str)
+                        if loc_match:
+                            location = loc_match.group(1)
+                            # Predefined locations (same as goal_publisher.py)
+                            locations = {
+                                'center': {'x': 0.0, 'y': 0.0, 'theta': 0.0},
+                                'corner_1': {'x': 2.5, 'y': 1.8, 'theta': 1.57},
+                                'corner_2': {'x': 2.5, 'y': -1.8, 'theta': -1.57},
+                                'corner_3': {'x': -2.5, 'y': 1.8, 'theta': 1.57},
+                                'corner_4': {'x': -2.5, 'y': -1.8, 'theta': -1.57},
+                            }
+                            if location in locations:
+                                goal_x = locations[location]['x']
+                                goal_y = locations[location]['y']
+                                goal_theta = locations[location]['theta']
+                
+                if goal_x is not None and goal_y is not None and goal_theta is not None:
+                    # Compute position error (Euclidean distance)
+                    dx = final_x - goal_x
+                    dy = final_y - goal_y
+                    goal_position_error = math.sqrt(dx*dx + dy*dy)
+                    
+                    # Compute heading error (normalized to [-pi, pi])
+                    heading_diff = normalize_angle(final_heading - goal_theta)
+                    goal_heading_error_rad = abs(heading_diff)
+                    goal_heading_error_deg = math.degrees(goal_heading_error_rad)
+            except Exception as e:
+                pass  # Silently skip if meta.json not readable
+
     summary = {
-        'bag_path': bag_path,
-        'duration_s': float(duration),
         'path_length_m': float(length),
         'min_obstacle_distance': obs_stats,
-        'path_lateral_error': err_stats,
-        'acc_linear_x': acc_stats,
-        'jerk_linear_x': jerk_stats,
+        'collision_detected': collision_detected,
+        'min_distance_value': float(min_distance_value) if min_distance_value != float('inf') else None,
+        'final_position': {'x': final_x, 'y': final_y} if final_x is not None else None,
+        'final_heading_rad': final_heading,
+        'goal_position_error_m': goal_position_error,
+        'goal_heading_error_rad': goal_heading_error_rad,
+        'goal_heading_error_deg': goal_heading_error_deg,
     }
 
     with open(f"{out_prefix}_summary.json", 'w') as f:

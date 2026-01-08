@@ -47,7 +47,7 @@ class RRTStarPlanner(Node):
         self.declare_parameter('goal_sample_rate', 0.3)
         self.declare_parameter('rewire_radius', 3.0)
         self.declare_parameter('robot_radius', 0.27)  # half of 54cm base
-        self.declare_parameter('safety_margin', 0.30)  # 30cm clearance
+        self.declare_parameter('safety_margin', 0.10)  # 10cm clearance for table approach
 
         self.map_data = None
         self.start_pose = None
@@ -271,6 +271,23 @@ class RRTStarPlanner(Node):
                 path.append(Pose(position=Point(x=curr.x, y=curr.y, z=0.0)))
                 curr = curr.parent
             path.reverse()
+            
+            # Compute headings from path direction (direction to next waypoint)
+            from geometry_msgs.msg import Quaternion
+            for i in range(len(path) - 1):
+                dx = path[i+1].position.x - path[i].position.x
+                dy = path[i+1].position.y - path[i].position.y
+                yaw = math.atan2(dy, dx)
+                # Convert yaw to quaternion
+                qz = math.sin(yaw / 2.0)
+                qw = math.cos(yaw / 2.0)
+                path[i].orientation = Quaternion(x=0.0, y=0.0, z=qz, w=qw)
+            
+            # For the last waypoint, use the goal pose's heading
+            if len(path) > 0:
+                path[-1].orientation = goal_pose.pose.orientation
+                self.get_logger().info(f'Path computed with {len(path)} waypoints. Final heading from goal: {goal_pose.pose.orientation}')
+            
             return path
         return None
 

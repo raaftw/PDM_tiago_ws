@@ -41,7 +41,7 @@ def generate_launch_description():
 
     declare_world_name = DeclareLaunchArgument(
         'world_name',
-        default_value='cafe',
+        default_value='walls_blocks',
         description='World name without extension (e.g., cafe, walls_blocks)'
     )
 
@@ -88,6 +88,43 @@ def generate_launch_description():
         default_value='benchmark_bag',
         description='Output prefix for rosbag2'
     )
+
+    declare_goal_location = DeclareLaunchArgument(
+        'goal_location',
+        default_value='center',
+        choices=['center', 'corner_1', 'corner_2', 'corner_3', 'corner_4'],
+        description='Predefined goal location: center, or corner_1/2/3/4 in front of tables'
+    )
+
+    declare_goal_x = DeclareLaunchArgument(
+        'goal_x',
+        default_value='',
+        description='Goal X coordinate (overrides goal_location if set)'
+    )
+
+    declare_goal_y = DeclareLaunchArgument(
+        'goal_y',
+        default_value='',
+        description='Goal Y coordinate (overrides goal_location if set)'
+    )
+
+    declare_goal_theta = DeclareLaunchArgument(
+        'goal_theta',
+        default_value='',
+        description='Goal orientation (overrides goal_location if set)'
+    )
+
+    declare_goal_delay = DeclareLaunchArgument(
+        'goal_delay',
+        default_value='30.0',
+        description='Seconds to wait before publishing goal (for startup)'
+    )
+
+    goal_location = LaunchConfiguration('goal_location')
+    goal_x = LaunchConfiguration('goal_x')
+    goal_y = LaunchConfiguration('goal_y')
+    goal_theta = LaunchConfiguration('goal_theta')
+    goal_delay = LaunchConfiguration('goal_delay')
 
     # ----- MPC branch (existing combined launch) -----
     mpc_combined_launch = IncludeLaunchDescription(
@@ -197,6 +234,43 @@ def generate_launch_description():
         }]
     )
 
+    # Automatic goal publisher for consistent benchmarking
+    # For MPC: publishes to /goal_pose
+    # For Nav2: sends NavigateToPose action
+    goal_publisher_mpc = Node(
+        package='pdm_test',
+        executable='goal_publisher',
+        name='goal_publisher',
+        output='screen',
+        parameters=[{
+            'mode': 'mpc',
+            'goal_location': goal_location,
+            'goal_x': goal_x,
+            'goal_y': goal_y,
+            'goal_theta': goal_theta,
+            'startup_delay': goal_delay,
+            'frame_id': 'map',
+        }],
+        condition=UnlessCondition(use_nav2)
+    )
+
+    goal_publisher_nav2 = Node(
+        package='pdm_test',
+        executable='goal_publisher',
+        name='goal_publisher',
+        output='screen',
+        parameters=[{
+            'mode': 'nav2',
+            'goal_location': goal_location,
+            'goal_x': goal_x,
+            'goal_y': goal_y,
+            'goal_theta': goal_theta,
+            'startup_delay': goal_delay,
+            'frame_id': 'map',
+        }],
+        condition=IfCondition(use_nav2)
+    )
+
     ld = LaunchDescription()
 
     # Arguments
@@ -209,6 +283,11 @@ def generate_launch_description():
     ld.add_action(declare_use_rviz)
     ld.add_action(declare_record_bag)
     ld.add_action(declare_bag_prefix)
+    ld.add_action(declare_goal_location)
+    ld.add_action(declare_goal_x)
+    ld.add_action(declare_goal_y)
+    ld.add_action(declare_goal_theta)
+    ld.add_action(declare_goal_delay)
 
     # Branches
     ld.add_action(mpc_combined_launch)
@@ -217,6 +296,8 @@ def generate_launch_description():
     ld.add_action(nav2_bringup)
     ld.add_action(ground_truth_republisher)
     ld.add_action(metrics_min_dist_node)
+    ld.add_action(goal_publisher_mpc)
+    ld.add_action(goal_publisher_nav2)
     ld.add_action(bag_record)
 
     return ld

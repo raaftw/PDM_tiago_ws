@@ -9,6 +9,15 @@ from pdm_test.models.tiago_diff_drive_model import TiagoDifferentialDriveModel
 from scipy.optimize import minimize
 from sensor_msgs.msg import LaserScan
 import time
+from enum import Enum
+from std_srvs.srv import Trigger
+
+class ControllerState(Enum):
+    """State machine for MPC controller."""
+    ACTIVE = 0          # Normal path tracking
+    STUCK = 1           # Robot stuck (failure timeout)
+    AT_GOAL = 2         # Robot at goal, ready for hand motion
+    WAITING = 3         # Waiting for hand motion to complete
 
 
 class MpcController(Node):
@@ -19,33 +28,31 @@ class MpcController(Node):
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         
         # MPC-specific parameters
-        self.Q_x = float(self.declare_parameter('Q_x', 30.0).value)
-        self.Q_y = float(self.declare_parameter('Q_y', 30.0).value)
+        self.Q_x = float(self.declare_parameter('Q_x', 60.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 60.0).value)
         self.Q_theta = float(self.declare_parameter('Q_theta', 0.0).value)
 
-        self.R_v = float(self.declare_parameter('R_v', 0.6).value)       
-        self.R_omega = float(self.declare_parameter('R_omega', 0.1).value)
+        self.R_v = float(self.declare_parameter('R_v', 0.6).value)
+        self.R_omega = float(self.declare_parameter('R_omega', 0.05).value)
 
-        self.Q_f_x = float(self.declare_parameter('Q_f_x', 80.0).value)
-        self.Q_f_y = float(self.declare_parameter('Q_f_y', 80.0).value)
+        self.Q_f_x = float(self.declare_parameter('Q_f_x', 20.0).value)
+        self.Q_f_y = float(self.declare_parameter('Q_f_y', 20.0).value)
         self.Q_f_theta = float(self.declare_parameter('Q_f_theta', 0.0).value)
 
         self.mpc_horizon = int(self.declare_parameter('mpc_horizon', 15).value)
-        self.optimizer_maxiter = int(self.declare_parameter('optimizer_maxiter', 200).value)
+        self.optimizer_maxiter = int(self.declare_parameter('optimizer_maxiter', 100).value)
 
         self._scan_points_buffer = []
 
         # Tiago constraints
         tiago_model = TiagoDifferentialDriveModel(dt=self.dt)
         self.max_v = float(self.declare_parameter('max_v', tiago_model.v_max).value)
-        self.v_min = float(self.declare_parameter('v_min', tiago_model.v_min).value)
+        self.v_min = float(self.declare_parameter('v_min', -0.1).value)  # Allow slow backward motion
         self.max_omega = float(self.declare_parameter('max_omega', tiago_model.omega_max).value)
         self.min_omega = float(self.declare_parameter('min_omega', tiago_model.omega_min).value)
 
         # Create publisher for cmd_vel
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-
-        # Performance metrics are handled by standalone nodes (e.g., metrics_min_distance)
 
         # Create subscriptions to odom and path (global planner) and laser scan (obstacle avoidance)
         self.create_subscription(Odometry, '/ground_truth_odom', self._odom_cb, 10)  # to get current state (gazebo ground truth)
@@ -54,6 +61,7 @@ class MpcController(Node):
 
         # Create control timer
         self.create_timer(self.dt, self._control_timer_cb)
+        self.exiting = False
 
         self.current_state = None   # numpy array [x,y,theta]
         self.reference_path = None  # numpy array (N,3)
@@ -61,11 +69,35 @@ class MpcController(Node):
         self.get_logger().info(f'Local planner initialized. MPC horizon: {self.mpc_horizon}, dt: {self.dt}s')
 
 
+        # ============ STATE MACHINE (Phase 1, 2, 3) ============
+        # Failure tracking
+        self.consecutive_failures = 0
+        self.consecutive_zeros = 0
+        self.failure_timeout_steps = 15  # 15 * 0.1s = 1.5s
+        
+        # State machine
+        self.controller_state = ControllerState.ACTIVE
+        
+        # Goal tracking
+        self.goal_pose = None  # Will store goal when path received
+        self.goal_distance_threshold = 0.10  # 10cm radius for goal success
+        self.goal_entry_time = None  # Time when robot entered goal radius
+        self.goal_hold_duration = 2.0  # Must stay in goal radius for 2 seconds
+        
+        # At-goal heading 
+        self.target_heading_goal = 1.0  # Global frame 
+        
+        # Service client for hand motion 
+        self.hand_motion_client = self.create_client(Trigger, '/clean_table')
+        self.hand_motion_called = False
+
+
 
     # ------------------------ CALLBACKS -----------------------
     def _control_timer_cb(self):
         """
-        Periodic control loop call back, compute and publish control twist msg.
+        Periodic control loop callback.
+        Implements state machine: ACTIVE -> STUCK -> AT_GOAL
         """
 
         # Publish zero if no state or path yet
@@ -73,14 +105,123 @@ class MpcController(Node):
             zero_msg = Twist()
             self.cmd_pub.publish(zero_msg)
             return
+        
+        # If motion finished, hold zero and stop
+        if self.exiting:
+            twist_msg = Twist()  # zeros
+            self.cmd_pub.publish(twist_msg)
+            return
+        
+        if self.controller_state == ControllerState.WAITING:
+            twist_msg = Twist()
+            self.cmd_pub.publish(twist_msg)
+            return
 
-        v, omega = self.compute_control(self.current_state, self.reference_path)
-
-        self.get_logger().info(f'AAA State: x={self.current_state[0]:.2f}, y={self.current_state[1]:.2f}, theta={self.current_state[2]:.2f}')
+        # ============ STATE MACHINE LOGIC ============
+        
+        if self.controller_state == ControllerState.ACTIVE:
+            # Try to compute MPC control
+            v, omega = self.compute_control(self.current_state, self.reference_path)
+            
+            # Check if within goal radius
+            if self.goal_pose is not None:
+                dist_to_goal = np.linalg.norm(self.current_state[:2] - self.goal_pose[:2])
+                
+                if dist_to_goal < self.goal_distance_threshold:
+                    # Entered goal radius
+                    if self.goal_entry_time is None:
+                        self.goal_entry_time = time.time()
+                        self.get_logger().info(f'Entered goal radius (dist={dist_to_goal:.3f}m, need to stay for {self.goal_hold_duration}s)')
+                    
+                    # Check if held for required duration
+                    time_in_goal = time.time() - self.goal_entry_time
+                    if time_in_goal >= self.goal_hold_duration:
+                        self.get_logger().info(f'Goal achieved! Stayed in radius for {time_in_goal:.2f}s')
+                        self.controller_state = ControllerState.AT_GOAL
+                        v, omega = 0.0, 0.0
+                else:
+                    # Left goal radius, reset timer
+                    if self.goal_entry_time is not None:
+                        self.get_logger().debug(f'Left goal radius, timer reset (dist={dist_to_goal:.3f}m)')
+                    self.goal_entry_time = None
+            
+            # Track failures only if not in goal radius
+            if self.goal_entry_time is None:  # Only track failures outside goal radius
+                if math.isnan(v) or math.isnan(omega):
+                    # MPC solver failed
+                    self.consecutive_failures += 1
+                    self.consecutive_zeros = 0
+                elif abs(v) < 1e-2 and abs(omega) < 0.16:
+                    # MPC output is zero (might be stuck)
+                    self.consecutive_zeros += 1
+                    self.consecutive_failures = 0
+                else:
+                    # Normal control output
+                    self.consecutive_failures = 0
+                    self.consecutive_zeros = 0
+                
+                # Check if stuck outside goal radius (Phase 1: timeout)
+                if self.consecutive_failures > self.failure_timeout_steps or self.consecutive_zeros > self.failure_timeout_steps * 3:
+                    self.get_logger().warn(f'STUCK FAILURE: failures={self.consecutive_failures}, zeros={self.consecutive_zeros}, not in goal radius')
+                    self.controller_state = ControllerState.STUCK
+                    v, omega = 0.0, 0.0  # Stop immediately
+            
+        elif self.controller_state == ControllerState.STUCK:
+            # Robot got stuck outside goal radius - this is a failure
+            if self.goal_pose is None:
+                self.get_logger().warn('STUCK but goal_pose is None, stopping')
+                v, omega = 0.0, 0.0
+            else:
+                # Check if now within goal radius
+                dist_to_goal = np.linalg.norm(self.current_state[:2] - self.goal_pose[:2])
+                self.get_logger().warn(f'STUCK OUTSIDE GOAL: distance_to_goal={dist_to_goal:.2f}m (goal_radius={self.goal_distance_threshold}m)')
+                
+                if dist_to_goal < self.goal_distance_threshold:
+                    # Managed to get to goal after getting stuck - still success
+                    self.get_logger().info('Got to goal after being stuck - goal achieved!')
+                    self.controller_state = ControllerState.AT_GOAL
+                    v, omega = 0.0, 0.0
+                else:
+                    # Failed - stuck and far from goal
+                    self.get_logger().error('TASK FAILED: Robot stuck and not within goal radius')
+                    v, omega = 0.0, 0.0
+        
+        elif self.controller_state == ControllerState.AT_GOAL:
+            # At goal: turn to target heading and call hand motion (Phase 3)
+            if not self.hand_motion_called:
+                # First, turn to target heading
+                current_heading = self.current_state[2]
+                heading_error = self._normalize_angle(self.target_heading_goal - current_heading)
+                
+                self.get_logger().info(f'AT_GOAL: current_heading={current_heading:.3f}, target={self.target_heading_goal:.3f}, error={heading_error:.3f}')
+                
+                # Use simple proportional control to turn
+                # If heading_error is large, apply omega; otherwise call hand motion
+                heading_threshold = 0.05  # radians 
+                
+                if abs(heading_error) > heading_threshold:
+                    # Still turning
+                    kp_heading = 10.0  # Proportional gain for heading
+                    omega = np.clip(kp_heading * heading_error, -self.max_omega, self.max_omega)
+                    v = 0.0
+                    self.get_logger().info(f'Turning to heading: error={heading_error:.3f}, omega={omega:.3f}')
+                else:
+                    # Heading aligned: call hand motion service
+                    self.get_logger().info('Heading aligned! Calling hand motion service...')
+                    self._call_hand_motion()
+                    self.hand_motion_called = True
+                    v, omega = 0.0, 0.0
+                    v, omega = 0.0, 0.0
+            else:
+                # Hand motion already called, stay stopped
+                v, omega = 0.0, 0.0
 
         # Saturate controls to avoid exceeding robot limits
         v = np.clip(v, self.v_min, self.max_v)
         omega = np.clip(omega, -self.max_omega, self.max_omega)
+
+        # Log state
+        self.get_logger().info(f'State: x={self.current_state[0]:.2f}, y={self.current_state[1]:.2f}, theta={self.current_state[2]:.2f}, FSM={self.controller_state.name}')
 
         # Create and publish twist message to cmd_vel
         twist_msg = Twist()
@@ -90,8 +231,6 @@ class MpcController(Node):
         self.get_logger().debug(f'Publishing v={v:.3f}, omega={omega:.3f}')
 
         self.cmd_pub.publish(twist_msg)
-
-        # Metrics publication handled by dedicated nodes
 
     def _odom_cb(self, msg: Odometry):
         """
@@ -108,6 +247,10 @@ class MpcController(Node):
 
 
     def _path_cb(self, msg: Path):
+        """
+        Path callback - extract reference trajectory and store goal.
+        Resets state machine when new path arrives.
+        """
         path_points = []
         for pose_stamped in msg.poses:
             x = pose_stamped.pose.position.x
@@ -117,6 +260,19 @@ class MpcController(Node):
             path_points.append([x, y, theta])
 
         path_array = np.array(path_points)
+        
+        # Store goal pose (last point in path)
+        if len(path_array) > 0:
+            self.goal_pose = path_array[-1]  # [x, y, theta]
+            self.target_heading_goal = path_array[-1][2]  # Use heading from goal
+            self.get_logger().info(f'Goal set to: x={self.goal_pose[0]:.2f}, y={self.goal_pose[1]:.2f}, theta={self.goal_pose[2]:.2f}')
+        
+        # Reset state machine when new path arrives
+        self.controller_state = ControllerState.ACTIVE
+        self.consecutive_failures = 0
+        self.consecutive_zeros = 0
+        self.hand_motion_called = False
+        self.goal_entry_time = None  # Reset goal timer on new path
         
         # First interpolate to get a smoother path
         if len(path_array) > 1:
@@ -177,7 +333,7 @@ class MpcController(Node):
         
         for r in msg.ranges:
             
-            if r > 0.3 and r >= msg.range_min and r <= msg.range_max:
+            if r > 0.27 and r >= msg.range_min and r <= msg.range_max:
                 # Check if this point is in the front FOV
                 if fov_min <= angle <= fov_max:
                     px_robot = r * np.cos(angle)
@@ -276,12 +432,12 @@ class MpcController(Node):
             heading_error = X[2,k] - ref_heading
             cost += 5.0 * heading_error**2 
 
-        # # Smoothness cost (to avoid wobbling)
-        # for k in range(N - 1):
-        #     v_change = U[0, k+1] - U[0, k]
-        #     omega_change = U[1, k+1] - U[1, k]
-        #     cost += 0.0 * v_change**2         # tune 0.5–2.0
-        #     cost += 2.0 * omega_change**2     # tune 2.0–6.0
+        # Smoothness cost (to avoid wobbling)
+        for k in range(N - 1):
+            v_change = U[0, k+1] - U[0, k]
+            omega_change = U[1, k+1] - U[1, k]
+            cost += 0.0 * v_change**2         # tune 0.5–2.0
+            cost += 2.0 * omega_change**2     # tune 2.0–6.0
 
         # Terminal cost
         final_error = X[:, N] - ref_traj[-1, :].reshape(3, 1)
@@ -328,7 +484,7 @@ class MpcController(Node):
             distances_to_robot.sort(key=lambda x: x[0])
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  # Top 3 closest
             
-            obstacle_penalty_weight = 40.0  # tune: 5–20
+            obstacle_penalty_weight = 50.0
 
             for k in range(N + 1):
                 min_dist = None
@@ -345,8 +501,8 @@ class MpcController(Node):
                     # Soft penalty for preferred distance
                     violation = ca.fmax(0, d_preferred - min_dist)
                     cost += obstacle_penalty_weight * violation**2
-        
-        
+
+
 
         # ==================== SOLVE ====================
 
@@ -375,6 +531,58 @@ class MpcController(Node):
             return 0.0, 0.0
 
 
+    def _normalize_angle(self, angle):
+        """
+        Normalize angle to [-pi, pi].
+        """
+        while angle > np.pi:
+            angle -= 2 * np.pi
+        while angle < -np.pi:
+            angle += 2 * np.pi
+        return angle
+
+    def _call_hand_motion(self):
+        """Call the /clean_table Trigger service for hand motion and then exit."""
+        # Wait briefly for the service to be ready
+        if not self.hand_motion_client.wait_for_service(timeout_sec=5.0):
+            self.get_logger().warn('/clean_table service not ready after 5s, skipping hand motion')
+            self._shutdown_node()
+            return
+
+        request = Trigger.Request()
+        try:
+            future = self.hand_motion_client.call_async(request)
+            future.add_done_callback(self._on_hand_motion_done)
+            self.get_logger().info('Hand motion service called successfully')
+        except Exception as e:
+            self.get_logger().error(f'Failed to call hand motion service: {str(e)}')
+            self._shutdown_node()
+
+    def _on_hand_motion_done(self, future):
+        try:
+            result = future.result()
+            self.get_logger().info(f'Hand motion finished: success={result.success}, msg="{result.message}"')
+        except Exception as e:
+            self.get_logger().warn(f'Hand motion future error: {e}')
+        self._shutdown_node()
+
+    def _shutdown_node(self):
+        """Stop timer, destroy node, and shutdown rclpy."""
+        self.get_logger().info('Shutting down MPC node after hand motion.')
+        try:
+            self.control_timer.cancel()
+        except Exception:
+            pass
+        try:
+            self.destroy_node()
+        except Exception:
+            pass
+        try:
+            rclpy.shutdown()
+        except Exception:
+            pass
+
+
 
 
 def main(args=None):
@@ -383,6 +591,10 @@ def main(args=None):
     """
     rclpy.init(args=args)
     node = MpcController()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+
+    try:
+        rclpy.spin(node)
+    finally:
+        node.destroy_node()
+        if rclpy.ok():  # only shut down if not already done
+            rclpy.shutdown()

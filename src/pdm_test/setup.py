@@ -52,6 +52,7 @@ setup(
             'tiago_table_cleaner_rrt = pdm_test.tiago_table_cleaner_rrt:main',
             'table_detector = pdm_test.table_detector:main',
             'metrics_min_distance = pdm_test.metrics_min_distance:main',
+            'goal_publisher = pdm_test.goal_publisher:main',
         ],
     },
 )

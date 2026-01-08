@@ -7,6 +7,7 @@ import sys
 import time
 import json
 import signal
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -68,8 +69,47 @@ def cleanup_processes():
     time.sleep(0.5)  # Brief pause for cleanup
 
 
+class GoalTimingMonitor:
+    """Monitor stdout/stderr for goal set and completion messages."""
+    def __init__(self, mode: str):
+        self.mode = mode
+        self.goal_set_time = None
+        self.goal_complete_time = None
+        
+        if mode == 'mpc':
+            self.goal_set_pattern = re.compile(r"Goal set to:")
+            # MPC driving done when it calls hand motion service (heading aligned)
+            self.goal_complete_pattern = re.compile(r"Heading aligned! Calling hand motion service")
+        else:  # nav2
+            # Nav2: look for goal reaching messages
+            self.goal_set_pattern = re.compile(r"(Received goal|Goal received|Setting goal)")
+            self.goal_complete_pattern = re.compile(r"(Goal succeeded|Task succeeded|Goal reached|Reached goal)")
+        
+    def process_line(self, line: str):
+        """Check if line contains goal-related events."""
+        if self.goal_set_time is None and self.goal_set_pattern.search(line):
+            self.goal_set_time = time.time()
+            print(f"[TIMING] Goal published at {self.goal_set_time}")
+        
+        if self.goal_complete_pattern.search(line):
+            self.goal_complete_time = time.time()
+            print(f"[TIMING] Driving complete, ready for cleaning at {self.goal_complete_time}")
+    
+    def get_goal_duration(self) -> dict:
+        """Return timing info as dict."""
+        result = {
+            'goal_set_time': self.goal_set_time,
+            'goal_complete_time': self.goal_complete_time,
+            'goal_achievement_duration_s': None,
+        }
+        if self.goal_set_time and self.goal_complete_time:
+            result['goal_achievement_duration_s'] = round(self.goal_complete_time - self.goal_set_time, 3)
+        return result
+
+
 def run_launch_and_record(run_dir: Path, mode: str, world: str, map_path: str | None,
-                          nav2_params: str | None, nav2_mode: str, use_sim_time: bool, use_rviz: bool) -> int:
+                          nav2_params: str | None, nav2_mode: str, use_sim_time: bool, use_rviz: bool,
+                          goal_location: str | None) -> tuple[int, dict]:
     bag_dir = run_dir / 'bag'
     bag_prefix = str(bag_dir)
 
@@ -89,6 +129,8 @@ def run_launch_and_record(run_dir: Path, mode: str, world: str, map_path: str | 
         cmd.append(f'map:={map_path}')
     if mode == 'nav2' and nav2_params:
         cmd.append(f'nav2_params:={nav2_params}')
+    if goal_location:
+        cmd.append(f'goal_location:={goal_location}')
 
     print('Launching benchmark...')
     print(' '.join(cmd))
@@ -102,7 +144,24 @@ def run_launch_and_record(run_dir: Path, mode: str, world: str, map_path: str | 
     # Ensure parent of bag exists
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    proc = subprocess.Popen(cmd, preexec_fn=os.setsid)
+    # Create timing monitor (mode-aware)
+    timing_monitor = GoalTimingMonitor(mode)
+    
+    proc = subprocess.Popen(cmd, preexec_fn=os.setsid, stdout=subprocess.PIPE, 
+                            stderr=subprocess.STDOUT, universal_newlines=True, bufsize=1)
+    
+    # Thread to monitor output for timing markers
+    def monitor_output():
+        try:
+            for line in proc.stdout:
+                print(line, end='')  # Print to console
+                timing_monitor.process_line(line)
+        except Exception:
+            pass
+    
+    monitor_thread = threading.Thread(target=monitor_output, daemon=True)
+    monitor_thread.start()
+    
     ret = 0
     try:
         ret = proc.wait()
@@ -129,6 +188,9 @@ def run_launch_and_record(run_dir: Path, mode: str, world: str, map_path: str | 
 
     end = time.time()
     end_iso = datetime.now().isoformat(timespec='seconds')
+    
+    # Get goal timing
+    goal_timing = timing_monitor.get_goal_duration()
 
     meta = {
         'mode': mode,
@@ -138,9 +200,11 @@ def run_launch_and_record(run_dir: Path, mode: str, world: str, map_path: str | 
         'nav2_mode': nav2_mode,
         'use_sim_time': use_sim_time,
         'use_rviz': use_rviz,
+        'goal_location': goal_location,
         'start_time_iso': start_iso,
         'end_time_iso': end_iso,
         'duration_s': round(end - start, 3),
+        'goal_timing': goal_timing,
         'bag_dir': str(bag_dir),
         'cwd': str(Path.cwd()),
         'git': git_info(Path.cwd()),
@@ -148,8 +212,14 @@ def run_launch_and_record(run_dir: Path, mode: str, world: str, map_path: str | 
         'launch_cmd': cmd,
     }
     write_json(run_dir / 'meta.json', meta)
+    
+    # Print timing summary
+    if goal_timing['goal_achievement_duration_s'] is not None:
+        print(f"\n[SUMMARY] Goal achievement time: {goal_timing['goal_achievement_duration_s']:.3f}s")
+    else:
+        print("\n[SUMMARY] Goal achievement timing not captured")
 
-    return ret
+    return ret, goal_timing
 
 
 def analyze(run_dir: Path):
@@ -178,6 +248,49 @@ def analyze(run_dir: Path):
     print('Analyzing bag...')
     print(' '.join(cmd))
     result = subprocess.run(cmd)
+    
+    # Add goal timing from meta.json to the summary
+    meta_path = run_dir / 'meta.json'
+    summary_path = run_dir / 'summary' / 'run_summary.json'
+    
+    if meta_path.exists() and summary_path.exists():
+        try:
+            with meta_path.open('r') as f:
+                meta = json.load(f)
+            with summary_path.open('r') as f:
+                summary = json.load(f)
+            
+            # Add only goal achievement duration to summary
+            if 'goal_timing' in meta and meta['goal_timing'].get('goal_achievement_duration_s') is not None:
+                summary['goal_achievement_duration_s'] = meta['goal_timing']['goal_achievement_duration_s']
+            
+            # Determine task success/failure
+            goal_achieved = 'goal_achievement_duration_s' in summary and summary['goal_achievement_duration_s'] is not None
+            collision_detected = summary.get('collision_detected', False)
+            
+            failure_reasons = []
+            if not goal_achieved:
+                failure_reasons.append('goal_not_reached')
+            if collision_detected:
+                failure_reasons.append('collision_detected')
+            
+            task_achieved = goal_achieved and not collision_detected
+            task_failed = not task_achieved
+            
+            summary['task_achieved'] = task_achieved
+            summary['task_failed'] = task_failed
+            summary['failure_reasons'] = failure_reasons
+            
+            # Write updated summary
+            with summary_path.open('w') as f:
+                json.dump(summary, f, indent=2)
+            
+            print(f'Task Status: achieved={task_achieved}, failed={task_failed}')
+            if failure_reasons:
+                print(f'Failure reasons: {", ".join(failure_reasons)}')
+        except Exception as e:
+            print(f'Warning: Could not merge goal timing into summary: {e}')
+    
     return result.returncode
 
 
@@ -189,6 +302,7 @@ def main():
     parser.add_argument('--nav2-params', default=None, help='Nav2 params yaml (if mode=nav2)')
     parser.add_argument('--nav2-mode', default='tiago_public', choices=['tiago_public', 'direct'],
                         help='Nav2 mode: tiago_public (external TIAGo sim) or direct (nav2_bringup)')
+    parser.add_argument('--goal-location', default=None, help='Goal location (center, corner_1, corner_2, corner_3, corner_4)')
     parser.add_argument('--root', default='runs', help='Root directory to store runs')
     parser.add_argument('--use-sim-time', action='store_true', help='Pass use_sim_time true')
     parser.add_argument('--no-rviz', action='store_true', help='Disable RViz in Nav2 branch')
@@ -208,13 +322,14 @@ def main():
         'map': args.map_path,
         'nav2_params': args.nav2_params,
         'nav2_mode': args.nav2_mode,
+        'goal_location': args.goal_location,
         'root': str(root),
     }
     write_json(run_dir / 'config.json', init_cfg)
 
     print(f'Run directory: {run_dir}')
 
-    ret = run_launch_and_record(
+    ret, goal_timing = run_launch_and_record(
         run_dir=run_dir,
         mode=mode,
         world=args.world,
@@ -223,6 +338,7 @@ def main():
         nav2_mode=args.nav2_mode,
         use_sim_time=args.use_sim_time,
         use_rviz=use_rviz,
+        goal_location=args.goal_location,
     )
 
     # Always try analysis after launch exits
