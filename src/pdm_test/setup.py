@@ -20,11 +20,25 @@ setup(
         (os.path.join('share', package_name, 'worlds'),
          glob('worlds/*.world')),
 
-        # install all launch files (py, xml) and rviz configs located in launch/
+        # install all launch files (including nested folders) and RViz configs
         (os.path.join('share', package_name, 'launch'),
-         glob('launch/*')),
+         glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/*.launch.xml')),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/*.py')),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/*.rviz')),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/**/*.launch.py', recursive=True)),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/**/*.launch.xml', recursive=True)),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/**/*.py', recursive=True)),
+        (os.path.join('share', package_name, 'launch'),
+         glob('launch/**/*.rviz', recursive=True)),
 
-        # install maps (yaml + pgm) from workspace src/maps into package share
+        # install maps from workspace src/maps into package share
         (os.path.join('share', package_name, 'maps'),
          glob(os.path.join('..', 'maps', '*.yaml'))),
         (os.path.join('share', package_name, 'maps'),
@@ -42,7 +56,7 @@ setup(
             'straight_driver = pdm_test.straight_driver:main',
             'trajectory_generator = pdm_test.trajectory_generator:main',
             'mpc_controller = pdm_test.local_planner:main',
-            'obstacle_publisher=pdm_test.obstacle_publisher:main',
+            'obstacle_publisher = pdm_test.obstacle_publisher:main',
             'global_planner = pdm_test.global_planner:main',
             'ground_truth_republisher = pdm_test.ground_truth_republisher:main',
             'tiago_table_cleaner = pdm_test.tiago_table_cleaner:main',
@@ -53,6 +67,9 @@ setup(
             'table_detector = pdm_test.table_detector:main',
             'metrics_min_distance = pdm_test.metrics_min_distance:main',
             'goal_publisher = pdm_test.goal_publisher:main',
+            'tiago_table_cleaner_rrt_ik = pdm_test.tiago_table_cleaner_rrt_ik:main',
+            'ik_debug_client = pdm_test.ik_debug_client:main',
+            'tiago_table_cleaner_rrt_visualization_ik = pdm_test.tiago_table_cleaner_rrt_visualization_ik:main',
         ],
     },
 )

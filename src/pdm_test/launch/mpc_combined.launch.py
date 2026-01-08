@@ -130,8 +130,8 @@ def generate_launch_description():
 
     cleaner_node = Node(
         package='pdm_test',
-        executable='tiago_table_cleaner_rrt',
-        name='tiago_table_cleaner_rrt',
+        executable='tiago_table_cleaner_rrt_visualization_ik',
+        name='tiago_table_cleaner_rrt_visualization_ik',
         output='screen',
     )
 

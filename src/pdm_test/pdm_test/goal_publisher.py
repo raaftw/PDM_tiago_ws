@@ -22,10 +22,10 @@ class GoalPublisher(Node):
         # Predefined goal locations (in front of tables - 4 corners)
         self.goal_locations = {
             'center': {'x': 0.0, 'y': 0.0, 'theta': 0.0},
-            'corner_1': {'x': 2.5, 'y': 1.8, 'theta': 1.57},      # Front-right
-            'corner_2': {'x': 2.5, 'y': -1.8, 'theta': -1.57},    # Back-right
-            'corner_3': {'x': -2.5, 'y': 1.8, 'theta': 1.57},     # Front-left
-            'corner_4': {'x': -2.5, 'y': -1.8, 'theta': -1.57},   # Back-left
+            'corner_1': {'x': 2.5, 'y': 1.7, 'theta': 1.57},      # Front-right
+            'corner_2': {'x': 2.5, 'y': -1.7, 'theta': -1.57},    # Back-right
+            'corner_3': {'x': -2.5, 'y': 1.7, 'theta': 1.57},     # Front-left
+            'corner_4': {'x': -2.5, 'y': -1.7, 'theta': -1.57},   # Back-left
         }
         
         # Parameters
