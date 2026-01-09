@@ -28,8 +28,8 @@ class MpcController(Node):
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         
         # MPC-specific parameters
-        self.Q_x = float(self.declare_parameter('Q_x', 30.0).value)
-        self.Q_y = float(self.declare_parameter('Q_y', 30.0).value)
+        self.Q_x = float(self.declare_parameter('Q_x', 35.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 35.0).value)
 
         self.R_v = float(self.declare_parameter('R_v', 0.8).value)
         self.R_omega = float(self.declare_parameter('R_omega', 0.02).value)
@@ -67,15 +67,8 @@ class MpcController(Node):
         self.get_logger().info(f'Local planner initialized. MPC horizon: {self.mpc_horizon}, dt: {self.dt}s')
 
 
-        # self.goal_slow_radius = float(self.declare_parameter('goal_slow_radius', 0.5).value)
-        # self.v_des_weight = float(self.declare_parameter('v_des_weight', 12.0).value)
-        # self.v_stop_weight = float(self.declare_parameter('v_stop_weight', 20.0).value)
-        # self.v_goal_cap = float(self.declare_parameter('v_goal_cap', 0.35).value)  # optional cap inside zone
-        # self.omega_relax_factor_min = float(self.declare_parameter('omega_relax_factor_min', 0.3).value)
-        # self.slowdown_exponent = float(self.declare_parameter('slowdown_exponent', 2.5).value)
-
         # Simple goal brake
-        self.brake_weight = float(self.declare_parameter('brake_weight', 35.0).value)
+        self.brake_weight = float(self.declare_parameter('brake_weight', 25.0).value)
         self.brake_radius = float(self.declare_parameter('brake_radius', 0.4).value)
 
 
@@ -205,7 +198,8 @@ class MpcController(Node):
         omega = np.clip(omega, -self.max_omega, self.max_omega)
 
         # Log state
-        self.get_logger().info(f'State: x={self.current_state[0]:.2f}, y={self.current_state[1]:.2f}, theta={self.current_state[2]:.2f}, FSM={self.controller_state.name}')
+        dist_to_goal = np.linalg.norm(self.current_state[:2] - self.goal_pose[:2])
+        self.get_logger().info(f'Distance to goal: {dist_to_goal:.2f}, State: x={self.current_state[0]:.2f}, y={self.current_state[1]:.2f}, theta={self.current_state[2]:.2f}, FSM={self.controller_state.name}')
 
         # Create and publish twist message to cmd_vel
         twist_msg = Twist()
@@ -426,67 +420,11 @@ class MpcController(Node):
             # Goal brake: penalize speed when close
             cost += self.brake_weight * brake_factor * U[0, k]**2
 
-        
+            # Strong penalty for backward motion (v < 0)
+            backward_penalty_weight = 4000.0
+            neg_v = ca.fmax(0, -U[0, k])  # ReLU(-v)
+            cost += backward_penalty_weight * neg_v**2
 
-
-        # lookahead_idx = min(5, len(ref_traj) - 1)  # 2 steps ahead
-        # target_x = ref_traj[lookahead_idx, 0]
-        # target_y = ref_traj[lookahead_idx, 1]
-
-        # dx = target_x - X[0, 0]
-        # dy = target_y - X[1, 0]
-        # desired_heading = ca.atan2(dy, dx)
-        # heading_error = ca.atan2(ca.sin(X[2, 0] - desired_heading), ca.cos(X[2, 0] - desired_heading))
-
-        # self.get_logger().info(f'Heading error:, {heading_error}')
-        # cost += 5.0 * heading_error**2
-
-        # Lookahead target (k=0 → lookahead 2-3 steps is smoother)
-        # lookahead_idx = min(3, N - 1)
-        # dx = ref_traj[lookahead_idx, 0] - X[0, 0]
-        # dy = ref_traj[lookahead_idx, 1] - X[1, 0]
-
-        # # Unit vector toward target
-        # norm = ca.sqrt(dx*dx + dy*dy) + 1e-9
-        # ux = dx / norm
-        # uy = dy / norm
-
-        # # Heading unit vector
-        # hx = ca.cos(X[2, 0])
-        # hy = ca.sin(X[2, 0])
-
-        
-
-        # # Single-step heading error toward a lookahead point
-        # lookahead_idx = min(2, N - 1)  # 2–4 is a good range
-        # dx0 = ref_traj[lookahead_idx, 0] - X[0, 0]
-        # dy0 = ref_traj[lookahead_idx, 1] - X[1, 0]
-
-        # # Unit vector to target
-        # norm0 = ca.sqrt(dx0*dx0 + dy0*dy0) + 1e-9
-        # ux0 = dx0 / norm0
-        # uy0 = dy0 / norm0
-
-        # # Heading unit vector
-        # hx0 = ca.cos(X[2, 0])
-        # hy0 = ca.sin(X[2, 0])
-
-        # # Alignment error in [0, 2]: 0 = perfect alignment, 2 = opposite
-        # align_err = 1.0 - (hx0*ux0 + hy0*uy0)
-    
-        # w_gate = 30.0  # tune 10–40
-        # # for k in range(N):
-        # #     cost += w_gate * align_err * U[0, k]**2
-
-        # turn_cost_weight = 0.5  # penalize not turning when misaligned
-        # min_turn = 0.2  # rad/s
-
-        # for k in range(N):
-        #     cost += w_gate * align_err * U[0, k]**2
-            
-        #     # Penalize insufficient turning when misaligned
-        #     turn_cost = ca.fmax(0, min_turn - ca.fabs(U[1, k]))
-        #     cost += turn_cost_weight * align_err * turn_cost**2
 
 
         w_heading = 5.0  # tune 5–12
@@ -551,7 +489,7 @@ class MpcController(Node):
         opti.subject_to(U[1, :] <= self.max_omega)
 
         d_safe = 0.35  # safety distance in meters
-        d_preferred = 0.6  # preferred distance in meters
+        d_preferred = 0.7  # preferred distance in meters
         scan_points = self._scan_points_buffer if hasattr(self, '_scan_points_buffer') else []
         
 
@@ -561,7 +499,7 @@ class MpcController(Node):
             distances_to_robot.sort(key=lambda x: x[0])
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  
             
-            obstacle_penalty_weight = 50.0
+            obstacle_penalty_weight = 60.0
 
             for k in range(N + 1):
                 min_dist = None
