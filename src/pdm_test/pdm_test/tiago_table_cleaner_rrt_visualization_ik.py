@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
+from rclpy.callback_groups import ReentrantCallbackGroup
 from builtin_interfaces.msg import Duration as DurationMsg
 
 from std_srvs.srv import Trigger
@@ -37,6 +38,9 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
     def __init__(self):
         super().__init__("tiago_table_cleaner_rrt_visualization_ik")
 
+        # --- Callback group (reentrant for async IK/FK + services + timers) ---
+        self.cb_group = ReentrantCallbackGroup()
+
         # --- Publishers ---
         self.arm_pub = self.create_publisher(
             JointTrajectory, "/arm_controller/joint_trajectory", 10
@@ -47,86 +51,52 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             MarkerArray, "/rrt_debug_markers", 10
         )
 
+        self.down_orientation = None
+
         # --- Joint state subscriber ---
         self._latest_joint_state: Optional[JointState] = None
-        self.create_subscription(JointState, "/joint_states", self._js_cb, 10)
+        self.create_subscription(
+            JointState, "/joint_states", self._js_cb, 10, callback_group=self.cb_group
+        )
 
         # --- MoveIt service clients ---
-        self.ik_client = self.create_client(GetPositionIK, "/compute_ik")
-        self.fk_client = self.create_client(GetPositionFK, "/compute_fk")
+        self.ik_client = self.create_client(
+            GetPositionIK, "/compute_ik", callback_group=self.cb_group
+        )
+        self.fk_client = self.create_client(
+            GetPositionFK, "/compute_fk", callback_group=self.cb_group
+        )
 
         # --- Service trigger ---
-        self.create_service(Trigger, "/clean_table", self._srv_clean_table)
+        self.create_service(
+            Trigger, "/clean_table", self._srv_clean_table, callback_group=self.cb_group
+        )
 
-        # --- MoveIt config (matches your working CLI IK/FK tests) ---
+        # --- MoveIt config ---
         self.moveit_group_name = "arm"
-        self.moveit_ee_link = "arm_7_link" #"gripper_tool_link" #"arm_7_link" #"arm_tool_link"
+        self.moveit_ee_link = "gripper_tool_link"
         self.planning_frame = "base_link"
 
         # --- Poses ---
-        #self.preclean_q: List[float] = [1.0, 1.0, 0.0, 2.2, -1.2, 0.7, 0.5]
-        self.preclean_q: List[float] = [0.50, -1.34, -0.48, 1.94, -1.49, 1.37, 0.00]
+        self.preclean_q: List[float] = [0.25, 1.0, 0.0, 2.2, -1.2, 0.7, 0.5]
         self.rest_q: List[float] = [0.50, -1.34, -0.48, 1.94, -1.49, 1.37, 0.00]
 
-        # Cartesian waypoints (base_link)
-        self.wipe_z = 0.51        # 1 cm above tabletop (0.50)
-        self.edge_margin = 0.05   # 5 cm inside edges
-        '''
-        x0, x1 = 0.50 + self.edge_margin, 1.00 - self.edge_margin
-        y0, y1 = -0.25 + self.edge_margin, 0.25 - self.edge_margin
-        z = self.wipe_z
-
-        # One square loop (closed)
-        self.cartesian_waypoints = [
-            (x0, y0, z),
-            (x1, y0, z),
-            (x1, y1, z),
-            (x0, y1, z),
-            (x0, y0, z),
-        ]
-        '''
-        
-        self.cartesian_waypoints: List[Tuple[float, float, float]] = [
-            (0.5, -0.2, 0.80),
-            (0.6, -0.2, 0.80),
-            (0.7, -0.2, 0.80),
-            (0.8, -0.2, 0.80),
-            (0.8, -0.1, 0.80),
-            (0.8,  0.0, 0.80),
-            (0.8,  0.1, 0.80),
-            (0.8,  0.2, 0.80),
-            (0.8,  0.2, 0.80),
-            (0.7,  0.2, 0.80),
-            (0.6,  0.2, 0.80),
-            (0.5,  0.1, 0.80),
-            (0.5,  0.0, 0.80),
-        ]
-        '''
+        # Cartesian waypoints (base_link) - zig-zag
         self.cartesian_waypoints: List[Tuple[float, float, float]] = [
             (0.5, -0.2, 0.65),
-            (0.6, -0.2, 0.65),
-            (0.7, -0.2, 0.65),
-            (0.8, -0.2, 0.65),
-            (0.8, -0.1, 0.65),
-            (0.8,  0.0, 0.65),
-            (0.8,  0.1, 0.65),
-            (0.8,  0.2, 0.65),
-            (0.7,  0.2, 0.65),
-            (0.6,  0.2, 0.65),
-            (0.5,  0.2, 0.65),
-            (0.5,  0.1, 0.65),
+            (0.75, -0.1, 0.65),
             (0.5,  0.0, 0.65),
+            (0.75,  0.1, 0.65),
+            (0.5,  0.2, 0.65),
         ]
-        '''
-        '''
-        self.cartesian_waypoints: List[Tuple[float, float, float]] = [
-            (0.6, 0.85, 0.0),
-            (0.7, 0.82, 0.0),
-            (0.7, 0.82, 0.2),
-            (0.6, 0.82, 0.2),
-            (0.6, 0.82, 0.0),
-        ]
-        '''
+
+        # Table collision box (base_link frame)
+        self.table_box = {
+            "x": (0.5, 1.1),
+            "y": (-0.3, 0.3),
+            "z": (0.45, 0.6),
+        }
+
         # --- Pipeline flags/state ---
         self._pipeline_running = False
         self._trigger_requested = False
@@ -149,21 +119,65 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             step_size=0.2,
             max_iters=2000,
             goal_bias=0.5,
-            on_add_edge=self._on_rrt_edge_added,   # rrt_connect_2.py supports this :contentReference[oaicite:1]{index=1}
+            on_add_edge=self._on_rrt_edge_added,
         )
 
         # Timer to check trigger
-        self.create_timer(0.1, self._timer_check_trigger)
+        self.create_timer(
+            0.1, self._timer_check_trigger, callback_group=self.cb_group
+        )
 
         # Wait for services
         self._wait_for_services()
+        self._init_down_orientation_from_preclean()
 
         self.get_logger().info(
             "READY. RViz: add MarkerArray topic /rrt_debug_markers, Fixed Frame base_link. "
             "Call /clean_table to run."
         )
 
+    # ------------------- Pipeline reset helper -------------------
+
+    def _reset_pipeline(self) -> None:
+        self._pipeline_running = False
+        self._ik_index = 0
+        self._ik_joint_waypoints = []
+        self._rrt_edges_q = []
+        self._fk_cache = {}
+        self.get_logger().info("Pipeline state reset; ready for next /clean_table.")
+
     # ------------------- ROS plumbing -------------------
+    def _init_down_orientation_from_preclean(self) -> None:
+        """Use FK on preclean_q to get a feasible 'gripper down' orientation."""
+        req = GetPositionFK.Request()
+        req.header.frame_id = self.planning_frame
+        req.fk_link_names = [self.moveit_ee_link]
+
+        js = JointState()
+        js.name = ARM_JOINTS
+        js.position = self.preclean_q
+        rs = RobotState()
+        rs.joint_state = js
+        req.robot_state = rs
+
+        future = self.fk_client.call_async(req)
+        rclpy.spin_until_future_complete(self, future, timeout_sec=1.0)
+        if not future.done():
+            self.get_logger().error("FK for preclean_q timed out; using identity orientation.")
+            return
+
+        res = future.result()
+        if res is None or res.error_code.val != res.error_code.SUCCESS or not res.pose_stamped:
+            self.get_logger().error("FK for preclean_q failed; using identity orientation.")
+            return
+
+        pose = res.pose_stamped[0].pose
+        self.down_orientation = pose.orientation
+        self.get_logger().info(
+            f"Initialized down_orientation from preclean_q: "
+            f"({self.down_orientation.x:.3f}, {self.down_orientation.y:.3f}, "
+            f"{self.down_orientation.z:.3f}, {self.down_orientation.w:.3f})"
+        )
 
     def _wait_for_services(self) -> None:
         self.get_logger().info("Waiting for /compute_ik ...")
@@ -206,13 +220,30 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             return None
 
     def is_state_valid(self, q: List[float]) -> bool:
-        return all(lo <= qi <= hi for qi, (lo, hi) in zip(q, JOINT_LIMITS))
+        # Joint limits
+        if not all(lo <= qi <= hi for qi, (lo, hi) in zip(q, JOINT_LIMITS)):
+            return False
+
+        # FK to get EE position
+        p = self._fk_point_sync(q)
+        if p is None:
+            return False
+
+        # Check against table box
+        xb, yb, zb = self.table_box["x"], self.table_box["y"], self.table_box["z"]
+        if xb[0] <= p.x <= xb[1] and yb[0] <= p.y <= yb[1] and zb[0] <= p.z <= zb[1]:
+            return False  # inside table volume
+
+        return True
 
     def is_edge_valid(self, q1: List[float], q2: List[float]) -> bool:
-        if not (self.is_state_valid(q1) and self.is_state_valid(q2)):
-            return False
-        mid = [(a + b) * 0.5 for a, b in zip(q1, q2)]
-        return self.is_state_valid(mid)
+        samples = 10  # more = safer, slower
+        for i in range(samples + 1):
+            alpha = i / samples
+            q = [(1 - alpha) * a + alpha * b for a, b in zip(q1, q2)]
+            if not self.is_state_valid(q):
+                return False
+        return True
 
     # ------------------- Pipeline (async IK -> RRT -> publish) -------------------
 
@@ -223,16 +254,20 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         self._q_start = self.get_current_q()
         if self._q_start is None:
             self.get_logger().error("No joint state. Aborting.")
-            self._pipeline_running = False
+            self._reset_pipeline()
             return
 
-        if not (self.ik_client.service_is_ready() and self.fk_client.service_is_ready()):
-            self.get_logger().error("IK/FK services not ready. Aborting.")
-            self._pipeline_running = False
+        # Wait briefly for services to be ready
+        if not self.ik_client.wait_for_service(timeout_sec=2.0):
+            self.get_logger().error("IK service not ready. Aborting.")
+            self._reset_pipeline()
+            return
+        if not self.fk_client.wait_for_service(timeout_sec=2.0):
+            self.get_logger().error("FK service not ready. Aborting.")
+            self._reset_pipeline()
             return
 
         self._clear_markers()
-        self._publish_heartbeat_marker()
 
         # reset IK and RRT debug storage
         self._ik_joint_waypoints = []
@@ -246,27 +281,45 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
     def _call_ik_for_current_waypoint(self) -> None:
         if self._ik_index >= len(self.cartesian_waypoints):
+            # All waypoints processed
+            if not self._ik_joint_waypoints:
+                self.get_logger().error("All IK waypoints failed. Resetting pipeline.")
+                self._reset_pipeline()
+                return
             self.get_logger().info("All IK waypoints solved. Starting RRT planning...")
             self._run_rrt_and_publish()
             return
 
         x, y, z = self.cartesian_waypoints[self._ik_index]
-        self.get_logger().info(f"Calling IK waypoint {self._ik_index+1}: ({x:.3f}, {y:.3f}, {z:.3f})")
+        self.get_logger().info(
+            f"Calling IK waypoint {self._ik_index+1}: ({x:.3f}, {y:.3f}, {z:.3f})"
+        )
 
         pose = PoseStamped()
         pose.header.frame_id = self.planning_frame
         pose.pose.position.x = x
         pose.pose.position.y = y
         pose.pose.position.z = z
-        pose.pose.orientation.w = 1.0
 
+        # Use FK-derived 'gripper down' orientation if available
+        if self.down_orientation is not None:
+            pose.pose.orientation = self.down_orientation
+        else:
+            # Fallback: identity
+            pose.pose.orientation.w = 1.0
+
+        # Build IK request
         req = GetPositionIK.Request()
         req.ik_request.group_name = self.moveit_group_name
         req.ik_request.pose_stamped = pose
         req.ik_request.ik_link_name = self.moveit_ee_link
 
-        # seed
-        seed_q = self.get_current_q()
+        # Seed with previous IK solution if available, else current joints
+        if self._ik_joint_waypoints:
+            seed_q = self._ik_joint_waypoints[-1]
+        else:
+            seed_q = self.get_current_q()
+
         if seed_q is not None:
             seed_js = JointState()
             seed_js.name = ARM_JOINTS
@@ -284,13 +337,17 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
                 res = future.result()
             except Exception as e:
                 self.get_logger().error(f"IK exception at waypoint {index+1}: {e}")
-                self._pipeline_running = False
+                self._reset_pipeline()
                 return
 
             if res is None or res.error_code.val != res.error_code.SUCCESS:
                 code = None if res is None else res.error_code.val
-                self.get_logger().error(f"IK failed at waypoint {index+1}, error_code={code}")
-                self._pipeline_running = False
+                self.get_logger().warn(
+                    f"IK failed at waypoint {index+1}, error_code={code}. Skipping this waypoint."
+                )
+                # Skip this waypoint and continue
+                self._ik_index += 1
+                self._call_ik_for_current_waypoint()
                 return
 
             js = res.solution.joint_state
@@ -299,7 +356,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
                 q = [float(name_to_pos[j]) for j in ARM_JOINTS]
             except KeyError as e:
                 self.get_logger().error(f"IK missing joint {e} at waypoint {index+1}")
-                self._pipeline_running = False
+                self._reset_pipeline()
                 return
 
             self._ik_joint_waypoints.append(q)
@@ -314,7 +371,12 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
     def _run_rrt_and_publish(self) -> None:
         if self._q_start is None:
-            self._pipeline_running = False
+            self._reset_pipeline()
+            return
+
+        if not self._ik_joint_waypoints:
+            self.get_logger().error("No valid IK waypoints. Resetting pipeline.")
+            self._reset_pipeline()
             return
 
         joint_targets: List[List[float]] = [self.preclean_q]
@@ -329,8 +391,8 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             self.get_logger().info(f"RRT segment {seg_idx}/{len(joint_targets)}...")
             path = self.planner.plan(current, goal)
             if not path:
-                self.get_logger().error(f"RRT failed at segment {seg_idx}.")
-                self._pipeline_running = False
+                self.get_logger().error(f"RRT failed at segment {seg_idx}. Resetting pipeline.")
+                self._reset_pipeline()
                 return
 
             if full_path:
@@ -344,7 +406,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             f"RRT complete. Joint states: {len(full_path)}. Collected edges: {len(self._rrt_edges_q)}"
         )
 
-        # Deterministic visualization (no async FK dependency)
+        # Deterministic visualization (no async FK dependency beyond _fk_point_sync)
         self._publish_rrt_markers_from_edges(self._rrt_edges_q, max_edges=800)
 
         # publish trajectory
@@ -352,7 +414,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         traj.joint_names = ARM_JOINTS
         t = 0.0
         for q in full_path:
-            t += 0.6
+            t += 0.3
             pt = JointTrajectoryPoint()
             pt.positions = q
             pt.time_from_start = DurationMsg(sec=int(t), nanosec=int((t % 1.0) * 1e9))
@@ -360,7 +422,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
         self.arm_pub.publish(traj)
         self.get_logger().info("Trajectory published.")
-        self._pipeline_running = False
+        self._reset_pipeline()
 
     # ------------------- RRT edge callback (store only, super reliable) -------------------
 
@@ -403,7 +465,11 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         self._fk_cache[k] = p
         return p
 
-    def _publish_rrt_markers_from_edges(self, edges_q: List[Tuple[List[float], List[float]]], max_edges: int = 800) -> None:
+    def _publish_rrt_markers_from_edges(
+        self,
+        edges_q: List[Tuple[List[float], List[float]]],
+        max_edges: int = 800,
+    ) -> None:
         # Limit edges so RViz doesn't get flooded
         edges_q = edges_q[:max_edges]
 
@@ -423,7 +489,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
         nodes = Marker()
         nodes.header.frame_id = self.planning_frame
-        nodes.header.stamp = self.get_clock().now().to_msg()
+        nodes.header.stamp = rclpy.time.Time().to_msg()  # Epoch time for latest TF
         nodes.ns = "rrt_nodes"
         nodes.id = 0
         nodes.type = Marker.SPHERE_LIST
@@ -437,7 +503,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
         edges = Marker()
         edges.header.frame_id = self.planning_frame
-        edges.header.stamp = self.get_clock().now().to_msg()
+        edges.header.stamp = rclpy.time.Time().to_msg()  # Epoch time for latest TF
         edges.ns = "rrt_edges"
         edges.id = 1
         edges.type = Marker.LINE_LIST
@@ -448,7 +514,9 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         arr.markers.append(edges)
 
         self.marker_pub.publish(arr)
-        self.get_logger().info(f"Published RRT markers: nodes={len(node_pts)}, edge_points={len(edge_pts)}")
+        self.get_logger().info(
+            f"Published RRT markers: nodes={len(node_pts)}, edge_points={len(edge_pts)}"
+        )
 
     # ------------------- Marker helpers -------------------
 
@@ -457,12 +525,12 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         m = Marker()
         m.action = Marker.DELETEALL
         m.header.frame_id = self.planning_frame
-        m.header.stamp = self.get_clock().now().to_msg()
+        m.header.stamp = rclpy.time.Time().to_msg()  # Epoch time for latest TF
         arr.markers.append(m)
         self.marker_pub.publish(arr)
 
     def _publish_heartbeat_marker(self) -> None:
-        """A marker that ALWAYS shows if RViz is configured correctly."""
+        """Kept for reference, but not used (no pink dot)."""
         arr = MarkerArray()
         m = Marker()
         m.header.frame_id = self.planning_frame
@@ -473,7 +541,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         m.action = Marker.ADD
         m.pose.position.x = 0.6
         m.pose.position.y = 0.0
-        m.pose.position.z = 0.85
+        m.pose.position.z = 0.8
         m.pose.orientation.w = 1.0
         m.scale.x = 0.05
         m.scale.y = 0.05
@@ -497,4 +565,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-

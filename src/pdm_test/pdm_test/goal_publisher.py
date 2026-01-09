@@ -9,9 +9,7 @@ For Nav2: sends goal via NavigateToPose action
 
 import rclpy
 from rclpy.node import Node
-from rclpy.action import ActionClient
 from geometry_msgs.msg import PoseStamped
-from nav2_msgs.action import NavigateToPose
 import math
 
 
@@ -22,10 +20,10 @@ class GoalPublisher(Node):
         # Predefined goal locations (in front of tables - 4 corners)
         self.goal_locations = {
             'center': {'x': 0.0, 'y': 0.0, 'theta': 0.0},
-            'corner_1': {'x': 2.5, 'y': 1.7, 'theta': 1.57},      # Front-right
-            'corner_2': {'x': 2.5, 'y': -1.7, 'theta': -1.57},    # Back-right
-            'corner_3': {'x': -2.5, 'y': 1.7, 'theta': 1.57},     # Front-left
-            'corner_4': {'x': -2.5, 'y': -1.7, 'theta': -1.57},   # Back-left
+            'corner_1': {'x': 2.5, 'y': 1.8, 'theta': 1.57},      # Front-right
+            'corner_2': {'x': 2.5, 'y': -1.8, 'theta': -1.57},    # Back-right
+            'corner_3': {'x': -2.5, 'y': 1.8, 'theta': 1.57},     # Front-left
+            'corner_4': {'x': -2.5, 'y': -1.8, 'theta': -1.57},   # Back-left
         }
         
         # Parameters
@@ -34,7 +32,7 @@ class GoalPublisher(Node):
         self.declare_parameter('goal_x', '')  # Empty means use goal_location
         self.declare_parameter('goal_y', '')
         self.declare_parameter('goal_theta', '')
-        self.declare_parameter('startup_delay', 10.0)
+        self.declare_parameter('startup_delay', 20.0)
         self.declare_parameter('frame_id', 'map')
         
         self.mode = self.get_parameter('mode').value
@@ -69,15 +67,8 @@ class GoalPublisher(Node):
         
         self.get_logger().info(f'Goal Publisher initialized: mode={self.mode}, goal=({self.goal_x}, {self.goal_y}, {self.goal_theta}), delay={self.startup_delay}s')
         
-        if self.mode == 'mpc':
-            # MPC: publish to /goal_pose
-            self.goal_pub = self.create_publisher(PoseStamped, '/goal_pose', 10)
-        elif self.mode == 'nav2':
-            # Nav2: use action client
-            self.nav_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
-        else:
-            self.get_logger().error(f'Invalid mode: {self.mode}')
-            return
+        # Both MPC and Nav2 use /goal_pose topic
+        self.goal_pub = self.create_publisher(PoseStamped, '/goal_pose', 10)
         
         # Wait for startup, then publish goal once
         self.timer = self.create_timer(self.startup_delay, self.publish_goal_once)
@@ -88,13 +79,11 @@ class GoalPublisher(Node):
         
         self.get_logger().info(f'Publishing goal now: mode={self.mode}, x={self.goal_x}, y={self.goal_y}, theta={self.goal_theta}')
         
-        if self.mode == 'mpc':
-            self.publish_mpc_goal()
-        elif self.mode == 'nav2':
-            self.publish_nav2_goal()
+        # Both modes use the same method now
+        self.publish_goal()
     
-    def publish_mpc_goal(self):
-        """Publish PoseStamped to /goal_pose for MPC."""
+    def publish_goal(self):
+        """Publish PoseStamped to /goal_pose (works for both MPC and Nav2)."""
         goal_msg = PoseStamped()
         goal_msg.header.stamp = self.get_clock().now().to_msg()
         goal_msg.header.frame_id = self.frame_id
@@ -117,47 +106,7 @@ class GoalPublisher(Node):
         self.get_logger().info(f'Goal message: position=({self.goal_x}, {self.goal_y}), yaw={self.goal_theta} rad ({math.degrees(self.goal_theta):.1f}°), quat=({goal_msg.pose.orientation.x}, {goal_msg.pose.orientation.y}, {goal_msg.pose.orientation.z}, {goal_msg.pose.orientation.w})')
         
         self.goal_pub.publish(goal_msg)
-        self.get_logger().info(f'MPC Goal published: x={self.goal_x}, y={self.goal_y}, theta={self.goal_theta}')
-    
-    def publish_nav2_goal(self):
-        """Send NavigateToPose goal for Nav2."""
-        if not self.nav_client.wait_for_server(timeout_sec=5.0):
-            self.get_logger().error('Nav2 action server not available after 5s')
-            return
-        
-        goal_msg = NavigateToPose.Goal()
-        goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
-        goal_msg.pose.header.frame_id = self.frame_id
-        
-        goal_msg.pose.pose.position.x = self.goal_x
-        goal_msg.pose.pose.position.y = self.goal_y
-        goal_msg.pose.pose.position.z = 0.0
-        
-        # Convert yaw to quaternion
-        qz = math.sin(self.goal_theta / 2.0)
-        qw = math.cos(self.goal_theta / 2.0)
-        goal_msg.pose.pose.orientation.x = 0.0
-        goal_msg.pose.pose.orientation.y = 0.0
-        goal_msg.pose.pose.orientation.z = qz
-        goal_msg.pose.pose.orientation.w = qw
-        
-        self.get_logger().info(f'Sending Nav2 goal: x={self.goal_x}, y={self.goal_y}, theta={self.goal_theta}')
-        future = self.nav_client.send_goal_async(goal_msg)
-        future.add_done_callback(self.goal_response_callback)
-    
-    def goal_response_callback(self, future):
-        goal_handle = future.result()
-        if not goal_handle.accepted:
-            self.get_logger().error('Nav2 goal rejected')
-            return
-
-        self.get_logger().info('Nav2 goal accepted')
-        result_future = goal_handle.get_result_async()
-        result_future.add_done_callback(self.goal_result_callback)
-
-    def goal_result_callback(self, future):
-        result = future.result().result
-        self.get_logger().info(f'Nav2 goal result: {result}')
+        self.get_logger().info(f'Goal published to /goal_pose: x={self.goal_x}, y={self.goal_y}, theta={self.goal_theta} (mode={self.mode})')
 
 
 def main(args=None):

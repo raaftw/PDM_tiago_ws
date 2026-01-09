@@ -28,8 +28,8 @@ class MpcController(Node):
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         
         # MPC-specific parameters
-        self.Q_x = float(self.declare_parameter('Q_x', 30.0).value)
-        self.Q_y = float(self.declare_parameter('Q_y', 30.0).value)
+        self.Q_x = float(self.declare_parameter('Q_x', 35.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 35.0).value)
 
         self.R_v = float(self.declare_parameter('R_v', 0.8).value)
         self.R_omega = float(self.declare_parameter('R_omega', 0.02).value)
@@ -75,7 +75,7 @@ class MpcController(Node):
         # self.slowdown_exponent = float(self.declare_parameter('slowdown_exponent', 2.5).value)
 
         # Simple goal brake
-        self.brake_weight = float(self.declare_parameter('brake_weight', 35.0).value)
+        self.brake_weight = float(self.declare_parameter('brake_weight', 25.0).value)
         self.brake_radius = float(self.declare_parameter('brake_radius', 0.4).value)
 
 
@@ -93,8 +93,8 @@ class MpcController(Node):
         self.goal_pose = None  # Will store goal when path received
         self.goal_distance_threshold = 0.5  # meters
         
-        # At-goal heading 
-        self.target_heading_goal = 1.0  # Global frame 
+        # At-goal heading (will be set from goal_pose when path arrives)
+        self.target_heading_goal = None  # Global frame 
         
         # Service client for hand motion 
         self.hand_motion_client = self.create_client(Trigger, '/clean_table')
@@ -207,7 +207,8 @@ class MpcController(Node):
         omega = np.clip(omega, -self.max_omega, self.max_omega)
 
         # Log state
-        self.get_logger().info(f'State: x={self.current_state[0]:.2f}, y={self.current_state[1]:.2f}, theta={self.current_state[2]:.2f}, FSM={self.controller_state.name}')
+        dist_to_goal = np.linalg.norm(self.current_state[:2] - self.goal_pose[:2]) if self.goal_pose is not None else float('inf')
+        self.get_logger().info(f'Distance to goal: {dist_to_goal:.2f}, State: x={self.current_state[0]:.2f}, y={self.current_state[1]:.2f}, theta={self.current_state[2]:.2f}, FSM={self.controller_state.name}')
 
         # Create and publish twist message to cmd_vel
         twist_msg = Twist()
@@ -250,6 +251,7 @@ class MpcController(Node):
         # Store goal pose (last point in path)
         if len(path_array) > 0:
             self.goal_pose = path_array[-1]  # [x, y, theta]
+            self.target_heading_goal = self.goal_pose[2]  # Set target heading from goal
             self.get_logger().info(f'Goal set to: x={self.goal_pose[0]:.2f}, y={self.goal_pose[1]:.2f}, theta={self.goal_pose[2]:.2f}')
         
         # Reset state machine when new path arrives
@@ -429,6 +431,11 @@ class MpcController(Node):
             # Goal brake: penalize speed when close
             cost += self.brake_weight * brake_factor * U[0, k]**2
 
+            # Strong penalty for backward motion (v < 0)
+            backward_penalty_weight = 4000.0
+            neg_v = ca.fmax(0, -U[0, k])  # ReLU(-v)
+            cost += backward_penalty_weight * neg_v**2
+
         
 
 
@@ -515,8 +522,7 @@ class MpcController(Node):
         for k in range(N - 1):
             v_change = U[0, k+1] - U[0, k]
             omega_change = U[1, k+1] - U[1, k]
-            cost += 0.0 * v_change**2         
-            cost += 1.5 * omega_change**2     
+            cost += 2.0 * omega_change**2     
 
 
         # Terminal cost toward actual goal
@@ -553,7 +559,7 @@ class MpcController(Node):
         opti.subject_to(U[1, :] <= self.max_omega)
 
         d_safe = 0.35  # safety distance in meters
-        d_preferred = 0.6  # preferred distance in meters
+        d_preferred = 0.7  # preferred distance in meters
         scan_points = self._scan_points_buffer if hasattr(self, '_scan_points_buffer') else []
         
 
@@ -563,7 +569,7 @@ class MpcController(Node):
             distances_to_robot.sort(key=lambda x: x[0])
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  
             
-            obstacle_penalty_weight = 50.0
+            obstacle_penalty_weight = 60.0
 
             for k in range(N + 1):
                 min_dist = None
@@ -646,7 +652,12 @@ class MpcController(Node):
             self.get_logger().info(f'Hand motion finished: success={result.success}, msg="{result.message}"')
         except Exception as e:
             self.get_logger().warn(f'Hand motion future error: {e}')
-        self._shutdown_node()
+        
+        # Pause MPC and wait for new path (don't shut down!)
+        self.controller_state = ControllerState.WAITING
+        self.reference_path = None
+        self.hand_motion_called = False
+        self.get_logger().info('Paused MPC after hand motion. Waiting for new /reference_path...')
 
     def _shutdown_node(self):
         """Stop timer, destroy node, and shutdown rclpy."""
