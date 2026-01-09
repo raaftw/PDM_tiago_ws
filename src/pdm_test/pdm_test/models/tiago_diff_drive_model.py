@@ -8,8 +8,8 @@ class TiagoDifferentialDriveModel:
     Control: [v, omega]
     """
     
-    def __init__(self, dt: float = 0.1, 
-                    v_min: float = 0.0, v_max: float = 0.6, 
+    def __init__(self, dt: float = 0.2, 
+                    v_min: float = 0.0, v_max: float = 0.5, 
                     omega_min: float = -0.5, omega_max: float = 0.5):
         """dt is the time step in seconds"""
         # Store dt, state_dim=3, control_dim=2
