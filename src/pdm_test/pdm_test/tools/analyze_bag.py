@@ -59,6 +59,7 @@ def read_bag_series(bag_path: str,
     # Build type map
     topics_and_types = reader.get_all_topics_and_types()
     type_map = {t.name: t.type for t in topics_and_types}
+    print(f"[DEBUG read_bag_series] Available topics: {list(type_map.keys())}")
 
     # Prepare deserializers for whitelisted topics that exist in bag
     topic_types: Dict[str, str] = {}
@@ -66,11 +67,15 @@ def read_bag_series(bag_path: str,
     for topic in topic_whitelist:
         if topic in type_map:
             topic_types[topic] = type_map[topic]
+            print(f"[DEBUG read_bag_series] Found {topic} with type {type_map[topic]}")
             try:
                 msg_types[topic] = get_message(type_map[topic])
-            except Exception:
+            except Exception as e:
                 # Skip if we cannot import the type
+                print(f"[DEBUG read_bag_series] Failed to get message type for {topic}: {e}")
                 pass
+        else:
+            print(f"[DEBUG read_bag_series] {topic} NOT found in bag (available: {list(type_map.keys())})")
 
     series: Dict[str, List[Tuple[float, object]]] = {t: [] for t in topic_types.keys()}
 
@@ -174,6 +179,32 @@ def extract_cmd_vel(series: List[Tuple[float, object]]) -> Tuple[List[float], Li
         except Exception:
             continue
     return t, vxs, wzs
+
+
+def extract_goal_pose(series: List[Tuple[float, object]]) -> Tuple[float, float, float]:
+    """Extract goal position (x, y, theta) from /goal_pose topic.
+    Returns the first goal pose found in the bag.
+    """
+    if not series:
+        return None, None, None
+    
+    for ts, msg in series:
+        try:
+            x = float(msg.pose.position.x)
+            y = float(msg.pose.position.y)
+            qx = float(msg.pose.orientation.x)
+            qy = float(msg.pose.orientation.y)
+            qz = float(msg.pose.orientation.z)
+            qw = float(msg.pose.orientation.w)
+            theta = quaternion_to_yaw(qx, qy, qz, qw)
+            print(f"[DEBUG] Extracted goal from /goal_pose: x={x}, y={y}, theta={theta}")
+            return x, y, theta
+        except Exception as e:
+            print(f"[DEBUG] Failed to extract goal pose: {e}")
+            continue
+    
+    print(f"[DEBUG] No valid goal pose found in {len(series)} messages")
+    return None, None, None
 
 
 def path_length(xs: List[float], ys: List[float]) -> float:
@@ -305,59 +336,24 @@ def analyze_bag(bag_path: str, out_prefix: str) -> Dict[str, object]:
         final_y = float(ys[-1])
         final_heading = float(yaws[-1])
         
-        # Try to load goal from meta.json
-        bag_dir = os.path.dirname(bag_path)
-        run_dir = os.path.dirname(bag_dir) if 'bag' in os.path.basename(bag_dir) else bag_dir
-        meta_path = os.path.join(run_dir, 'meta.json')
+        # Extract actual goal from /goal_pose topic in the bag
+        goal_series = series.get('/goal_pose', [])
+        print(f"[DEBUG main] /goal_pose series contains {len(goal_series)} messages")
+        if goal_series:
+            print(f"[DEBUG main] First goal message type: {type(goal_series[0][1])}")
+        goal_x, goal_y, goal_theta = extract_goal_pose(goal_series)
+        print(f"[DEBUG main] Extracted goal: x={goal_x}, y={goal_y}, theta={goal_theta}")
         
-        if os.path.exists(meta_path):
-            try:
-                with open(meta_path, 'r') as f:
-                    meta = json.load(f)
-                
-                # Get goal from launch command (check for goal_location or goal_x/y/theta)
-                if 'launch_cmd' in meta:
-                    cmd_str = ' '.join(meta['launch_cmd'])
-                    # Extract goal_x, goal_y, goal_theta from command
-                    import re
-                    x_match = re.search(r'goal_x:=([\-\d.]+)', cmd_str)
-                    y_match = re.search(r'goal_y:=([\-\d.]+)', cmd_str)
-                    theta_match = re.search(r'goal_theta:=([\-\d.]+)', cmd_str)
-                    
-                    if x_match and y_match and theta_match:
-                        goal_x = float(x_match.group(1))
-                        goal_y = float(y_match.group(1))
-                        goal_theta = float(theta_match.group(1))
-                    else:
-                        # Try to parse goal_location
-                        loc_match = re.search(r'goal_location:=(\w+)', cmd_str)
-                        if loc_match:
-                            location = loc_match.group(1)
-                            # Predefined locations (same as goal_publisher.py)
-                            locations = {
-                                'center': {'x': 0.0, 'y': 0.0, 'theta': 0.0},
-                                'corner_1': {'x': 2.5, 'y': 1.8, 'theta': 1.57},
-                                'corner_2': {'x': 2.5, 'y': -1.8, 'theta': -1.57},
-                                'corner_3': {'x': -2.5, 'y': 1.8, 'theta': 1.57},
-                                'corner_4': {'x': -2.5, 'y': -1.8, 'theta': -1.57},
-                            }
-                            if location in locations:
-                                goal_x = locations[location]['x']
-                                goal_y = locations[location]['y']
-                                goal_theta = locations[location]['theta']
-                
-                if goal_x is not None and goal_y is not None and goal_theta is not None:
-                    # Compute position error (Euclidean distance)
-                    dx = final_x - goal_x
-                    dy = final_y - goal_y
-                    goal_position_error = math.sqrt(dx*dx + dy*dy)
-                    
-                    # Compute heading error (normalized to [-pi, pi])
-                    heading_diff = normalize_angle(final_heading - goal_theta)
-                    goal_heading_error_rad = abs(heading_diff)
-                    goal_heading_error_deg = math.degrees(goal_heading_error_rad)
-            except Exception as e:
-                pass  # Silently skip if meta.json not readable
+        if goal_x is not None and goal_y is not None and goal_theta is not None:
+            # Compute position error (Euclidean distance)
+            dx = final_x - goal_x
+            dy = final_y - goal_y
+            goal_position_error = math.sqrt(dx*dx + dy*dy)
+            
+            # Compute heading error (normalized to [-pi, pi])
+            heading_diff = normalize_angle(final_heading - goal_theta)
+            goal_heading_error_rad = abs(heading_diff)
+            goal_heading_error_deg = math.degrees(goal_heading_error_rad)
 
     summary = {
         'path_length_m': float(length),

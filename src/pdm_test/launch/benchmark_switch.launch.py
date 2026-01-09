@@ -211,6 +211,7 @@ def generate_launch_description():
         '/reference_path',
         '/cmd_vel',
         '/scan_raw',
+        '/goal_pose',
         '/metrics/min_obstacle_distance',
         '/metrics/path_lateral_error',
         '/tf',

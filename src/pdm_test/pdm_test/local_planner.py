@@ -28,8 +28,8 @@ class MpcController(Node):
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         
         # MPC-specific parameters
-        self.Q_x = float(self.declare_parameter('Q_x', 50.0).value)
-        self.Q_y = float(self.declare_parameter('Q_y', 50.0).value)
+        self.Q_x = float(self.declare_parameter('Q_x', 30.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 30.0).value)
 
         self.R_v = float(self.declare_parameter('R_v', 0.8).value)
         self.R_omega = float(self.declare_parameter('R_omega', 0.02).value)
