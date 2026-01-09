@@ -30,14 +30,12 @@ class MpcController(Node):
         # MPC-specific parameters
         self.Q_x = float(self.declare_parameter('Q_x', 30.0).value)
         self.Q_y = float(self.declare_parameter('Q_y', 30.0).value)
-        self.Q_theta = float(self.declare_parameter('Q_theta', 0.0).value)
 
         self.R_v = float(self.declare_parameter('R_v', 0.8).value)
         self.R_omega = float(self.declare_parameter('R_omega', 0.02).value)
 
         self.Q_f_x = float(self.declare_parameter('Q_f_x', 80.0).value)
         self.Q_f_y = float(self.declare_parameter('Q_f_y', 80.0).value)
-        self.Q_f_theta = float(self.declare_parameter('Q_f_theta', 0.0).value)
 
         self.mpc_horizon = int(self.declare_parameter('mpc_horizon', 15).value)
         self.optimizer_maxiter = int(self.declare_parameter('optimizer_maxiter', 200).value)
@@ -69,19 +67,21 @@ class MpcController(Node):
         self.get_logger().info(f'Local planner initialized. MPC horizon: {self.mpc_horizon}, dt: {self.dt}s')
 
 
-        self.goal_slow_radius = float(self.declare_parameter('goal_slow_radius', 0.5).value)
-        self.v_des_weight = float(self.declare_parameter('v_des_weight', 20.0).value)
-        self.v_stop_weight = float(self.declare_parameter('v_stop_weight', 50.0).value)
-        self.v_goal_cap = float(self.declare_parameter('v_goal_cap', 0.2).value)  # optional cap inside zone
-        self.omega_relax_factor_min = float(self.declare_parameter('omega_relax_factor_min', 0.3).value)
-        self.slowdown_exponent = float(self.declare_parameter('slowdown_exponent', 2.0).value)
+        # self.goal_slow_radius = float(self.declare_parameter('goal_slow_radius', 0.5).value)
+        # self.v_des_weight = float(self.declare_parameter('v_des_weight', 12.0).value)
+        # self.v_stop_weight = float(self.declare_parameter('v_stop_weight', 20.0).value)
+        # self.v_goal_cap = float(self.declare_parameter('v_goal_cap', 0.35).value)  # optional cap inside zone
+        # self.omega_relax_factor_min = float(self.declare_parameter('omega_relax_factor_min', 0.3).value)
+        # self.slowdown_exponent = float(self.declare_parameter('slowdown_exponent', 2.5).value)
+
+        # Simple goal brake
+        self.brake_weight = float(self.declare_parameter('brake_weight', 35.0).value)
+        self.brake_radius = float(self.declare_parameter('brake_radius', 0.4).value)
 
 
-        # Obstacle proximity slowdown
-        self.obstacle_slowdown_weight = float(self.declare_parameter('obstacle_slowdown_weight', 20.0).value)
-        self.obstacle_slowdown_distance = float(self.declare_parameter('obstacle_slowdown_distance', 1.0).value)  # meters
 
-        # ============ STATE MACHINE (Phase 1, 2, 3) ============
+        # ============ STATE MACHINE TO TRACK STATE OF CONTROLLER ============
+
         # Failure tracking
         self.consecutive_failures = 0
         self.consecutive_zeros = 0
@@ -137,7 +137,7 @@ class MpcController(Node):
                 # MPC solver failed
                 self.consecutive_failures += 1
                 self.consecutive_zeros = 0
-            elif abs(v) < 1e-2 and abs(omega) < 0.16:
+            elif abs(v) < 5e-2 and abs(omega) < 0.16:
                 # MPC output is zero (might be stuck)
                 self.consecutive_zeros += 1
                 self.consecutive_failures = 0
@@ -147,7 +147,7 @@ class MpcController(Node):
                 self.consecutive_zeros = 0
             
             # Check if stuck (Phase 1: timeout)
-            if self.consecutive_failures > self.failure_timeout_steps or self.consecutive_zeros > self.failure_timeout_steps * 3:
+            if self.consecutive_failures > self.failure_timeout_steps or self.consecutive_zeros > self.failure_timeout_steps * 2:
                 self.get_logger().warn(f'STUCK detected: failures={self.consecutive_failures}, zeros={self.consecutive_zeros}')
                 self.controller_state = ControllerState.STUCK
                 v, omega = 0.0, 0.0  # Stop immediately
@@ -392,7 +392,7 @@ class MpcController(Node):
         # Cost function
         cost = 0
 
-        # Distance to actual goal (prefer self.goal_pose; fallback to end of ref_traj)
+        # Simple goal proximity brake: penalize speed when close
         if getattr(self, 'goal_pose', None) is not None:
             dist_goal = float(np.linalg.norm(state[:2] - self.goal_pose[:2]))
             goal_target = self.goal_pose.reshape(3, 1)
@@ -400,32 +400,17 @@ class MpcController(Node):
             dist_goal = float(np.linalg.norm(state[:2] - ref_traj[-1, :2]))
             goal_target = ref_traj[-1, :].reshape(3, 1)
 
-        # Proximity factor alpha in [0,1] within slowdown radius
-        R = max(self.goal_slow_radius, 1e-6)
-        alpha = float(np.clip((R - dist_goal) / R, 0.0, 1.0))
-        alpha_p = alpha ** self.slowdown_exponent
-
-
-
-        
-
-        # Desired speed ramp: from max_v down to near 0 as dist_goal → 0
-        v_min_goal = 0.05  # non-zero to avoid solver singularities; tune to 0.0–0.1
-        if dist_goal > R:
-            v_des = self.max_v
+        # Brake factor: ramps from 0 (far) to strong (close)
+        brake_radius = 0.4  # meters
+        if dist_goal < brake_radius:
+            brake_factor = (brake_radius - dist_goal) / brake_radius  # 0→1 as you get closer
         else:
-            v_des = v_min_goal + (self.max_v - v_min_goal) * (dist_goal / R)
+            brake_factor = 0.0
 
-        # Omega relaxation near goal
-        omega_weight_scale = 1.0 - (1.0 - self.omega_relax_factor_min) * alpha_p
-
-        # Optional: hard cap max v inside radius (static numeric bound for this solve)
-        local_max_v = self.max_v if dist_goal > R else min(self.max_v, self.v_goal_cap)
-
-        self.get_logger().info(
-            f'Goal slowdown: dist={dist_goal:.2f}m, alpha={alpha:.2f}, v_des={v_des:.2f}, '
-            f'omega_scale={omega_weight_scale:.2f}, v_cap={local_max_v:.2f}'
-        )
+        # Add speed penalty near goal
+        brake_weight = 25.0  # tune 15–40
+        for k in range(N):
+            cost += brake_weight * brake_factor * U[0, k]**2
 
 
 
@@ -433,41 +418,95 @@ class MpcController(Node):
             state_error = X[:, k] - ref_traj[k, :].reshape(3, 1)
             cost += self.Q_x * state_error[0]**2
             cost += self.Q_y * state_error[1]**2
-            cost += self.Q_theta * state_error[2]**2
-
-            # cost += self.R_v * U[0, k]**2
-
-            # backward_penalty = 100.0  # Factor to penalize ebackward motion
-            # cost += self.R_v * U[0, k]**2  # Base velocity cost
-            # cost += 1.0 * (U[0, k] - 0.5)**2  # penalize deviation from v_ref (0m5)
-
-            # cost += self.R_omega * U[1, k]**2
 
             # Base effort costs with omega relaxed near goal
             cost += self.R_v * U[0, k]**2
-            cost += (self.R_omega * omega_weight_scale) * U[1, k]**2
+            cost += self.R_omega * U[1, k]**2
 
-            # Desired-speed tracking near goal
-            cost += (self.v_des_weight * alpha_p) * (U[0, k] - v_des)**2
+            # Goal brake: penalize speed when close
+            cost += self.brake_weight * brake_factor * U[0, k]**2
+
         
 
-        # Heading alignment: point toward next reference waypoint from current predicted position
-        for k in range(N):
-            # Vector from current predicted position to next waypoint
-            if k < N - 1:
-                target_x = ref_traj[k + 1, 0]
-                target_y = ref_traj[k + 1, 1]
-            else:
-                # At final step, point toward goal
-                target_x = goal_target[0]
-                target_y = goal_target[1]
+
+        # lookahead_idx = min(5, len(ref_traj) - 1)  # 2 steps ahead
+        # target_x = ref_traj[lookahead_idx, 0]
+        # target_y = ref_traj[lookahead_idx, 1]
+
+        # dx = target_x - X[0, 0]
+        # dy = target_y - X[1, 0]
+        # desired_heading = ca.atan2(dy, dx)
+        # heading_error = ca.atan2(ca.sin(X[2, 0] - desired_heading), ca.cos(X[2, 0] - desired_heading))
+
+        # self.get_logger().info(f'Heading error:, {heading_error}')
+        # cost += 5.0 * heading_error**2
+
+        # Lookahead target (k=0 → lookahead 2-3 steps is smoother)
+        # lookahead_idx = min(3, N - 1)
+        # dx = ref_traj[lookahead_idx, 0] - X[0, 0]
+        # dy = ref_traj[lookahead_idx, 1] - X[1, 0]
+
+        # # Unit vector toward target
+        # norm = ca.sqrt(dx*dx + dy*dy) + 1e-9
+        # ux = dx / norm
+        # uy = dy / norm
+
+        # # Heading unit vector
+        # hx = ca.cos(X[2, 0])
+        # hy = ca.sin(X[2, 0])
+
+        
+
+        # # Single-step heading error toward a lookahead point
+        # lookahead_idx = min(2, N - 1)  # 2–4 is a good range
+        # dx0 = ref_traj[lookahead_idx, 0] - X[0, 0]
+        # dy0 = ref_traj[lookahead_idx, 1] - X[1, 0]
+
+        # # Unit vector to target
+        # norm0 = ca.sqrt(dx0*dx0 + dy0*dy0) + 1e-9
+        # ux0 = dx0 / norm0
+        # uy0 = dy0 / norm0
+
+        # # Heading unit vector
+        # hx0 = ca.cos(X[2, 0])
+        # hy0 = ca.sin(X[2, 0])
+
+        # # Alignment error in [0, 2]: 0 = perfect alignment, 2 = opposite
+        # align_err = 1.0 - (hx0*ux0 + hy0*uy0)
+    
+        # w_gate = 30.0  # tune 10–40
+        # # for k in range(N):
+        # #     cost += w_gate * align_err * U[0, k]**2
+
+        # turn_cost_weight = 0.5  # penalize not turning when misaligned
+        # min_turn = 0.2  # rad/s
+
+        # for k in range(N):
+        #     cost += w_gate * align_err * U[0, k]**2
             
-            dx = target_x - X[0, k]
-            dy = target_y - X[1, k]
-            desired_heading = ca.atan2(dy, dx)
-            heading_error = ca.atan2(ca.sin(X[2, k] - desired_heading), ca.cos(X[2, k] - desired_heading))
+        #     # Penalize insufficient turning when misaligned
+        #     turn_cost = ca.fmax(0, min_turn - ca.fabs(U[1, k]))
+        #     cost += turn_cost_weight * align_err * turn_cost**2
+
+
+        w_heading = 5.0  # tune 5–12
+        window = min(5, N)  # penalize heading for first 5 steps
+
+        for k in range(window):
+            lookahead_idx = min(k + 2, N - 1)
+            dx = ref_traj[lookahead_idx, 0] - X[0, k]
+            dy = ref_traj[lookahead_idx, 1] - X[1, k]
             
-            cost += 3.0 * heading_error**2
+            norm = ca.sqrt(dx*dx + dy*dy) + 1e-9
+            ux = dx / norm
+            uy = dy / norm
+            
+            hx = ca.cos(X[2, k])
+            hy = ca.sin(X[2, k])
+            
+            align_err = 1.0 - (hx*ux + hy*uy)
+            cost += w_heading * align_err**2
+
 
         # Smoothness cost (to avoid wobbling)
         for k in range(N - 1):
@@ -482,8 +521,6 @@ class MpcController(Node):
         cost += self.Q_f_x * final_error[0]**2
         cost += self.Q_f_y * final_error[1]**2
 
-        # Final-step stop penalty near goal (push v → 0 at the end)
-        cost += (self.v_stop_weight * alpha_p) * U[0, N-1]**2
         
         # ==================== CONSTRAINTS ====================
         
@@ -508,7 +545,8 @@ class MpcController(Node):
         
         # Control bounds
         opti.subject_to(U[0, :] >= self.v_min)
-        opti.subject_to(U[0, :] <= local_max_v)
+        opti.subject_to(U[0, :] <= self.max_v)
+        opti.subject_to(U[0, :] >= self.v_min)
         opti.subject_to(U[1, :] >= -self.max_omega)
         opti.subject_to(U[1, :] <= self.max_omega)
 
@@ -523,7 +561,7 @@ class MpcController(Node):
             distances_to_robot.sort(key=lambda x: x[0])
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  
             
-            obstacle_penalty_weight = 40.0
+            obstacle_penalty_weight = 50.0
 
             for k in range(N + 1):
                 min_dist = None
@@ -540,24 +578,6 @@ class MpcController(Node):
                     # Soft penalty for preferred distance
                     violation = ca.fmax(0, d_preferred - min_dist)
                     cost += obstacle_penalty_weight * violation**2
-
-            # # Obstacle proximity slowdown cost
-            # for k in range(N):
-            #     min_dist_to_obs = None
-            #     for px, py in closest_n_obstacles:
-            #         dist = ca.sqrt((X[0, k] - px)**2 + (X[1, k] - py)**2)
-            #         if min_dist_to_obs is None:
-            #             min_dist_to_obs = dist
-            #         else:
-            #             min_dist_to_obs = ca.fmin(min_dist_to_obs, dist)
-                
-            #     if min_dist_to_obs is not None:
-            #         # Proximity factor: 1.0 when at obstacle, 0.0 when far away
-            #         obs_proximity = ca.fmax(0, (self.obstacle_slowdown_distance - min_dist_to_obs) / self.obstacle_slowdown_distance)
-                    
-            #         # Penalize speed when close to obstacles: cost increases with v * proximity
-            #         cost += self.obstacle_slowdown_weight * obs_proximity * U[0, k]**2
-
 
         
 
@@ -580,6 +600,9 @@ class MpcController(Node):
 
             v_opt = float(sol.value(U[0, 0]))
             omega_opt = float(sol.value(U[1, 0]))
+
+            heading_err_val = float(sol.value(align_err))
+            self.get_logger().info(f'Heading align error: {heading_err_val:.3f}')
 
             self.get_logger().info(f'MPC solved in {solve_ms:.1f} ms: v={v_opt:.3f}, omega={omega_opt:.3f}')
             return v_opt, omega_opt
