@@ -401,12 +401,6 @@ class MpcController(Node):
         else:
             brake_factor = 0.0
 
-        # Add speed penalty near goal
-        brake_weight = 25.0  # tune 15–40
-        for k in range(N):
-            cost += brake_weight * brake_factor * U[0, k]**2
-
-
 
         for k in range(N):
             state_error = X[:, k] - ref_traj[k, :].reshape(3, 1)
@@ -424,7 +418,6 @@ class MpcController(Node):
             backward_penalty_weight = 4000.0
             neg_v = ca.fmax(0, -U[0, k])  # ReLU(-v)
             cost += backward_penalty_weight * neg_v**2
-
 
 
         w_heading = 5.0  # tune 5–12
@@ -450,9 +443,7 @@ class MpcController(Node):
         for k in range(N - 1):
             v_change = U[0, k+1] - U[0, k]
             omega_change = U[1, k+1] - U[1, k]
-            cost += 0.0 * v_change**2         
-            cost += 1.5 * omega_change**2     
-
+            cost += 2.0 * omega_change**2     
 
         # Terminal cost toward actual goal
         final_error = X[:, N] - goal_target
@@ -500,6 +491,7 @@ class MpcController(Node):
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  
             
             obstacle_penalty_weight = 60.0
+
 
             for k in range(N + 1):
                 min_dist = None
@@ -583,7 +575,12 @@ class MpcController(Node):
             self.get_logger().info(f'Hand motion finished: success={result.success}, msg="{result.message}"')
         except Exception as e:
             self.get_logger().warn(f'Hand motion future error: {e}')
-        self._shutdown_node()
+        
+        # Pause MPC and wait for new path (don't shut down!)
+        self.controller_state = ControllerState.WAITING
+        self.reference_path = None
+        self.hand_motion_called = False
+        self.get_logger().info('Paused MPC after hand motion. Waiting for new /reference_path...')
 
     def _shutdown_node(self):
         """Stop timer, destroy node, and shutdown rclpy."""
