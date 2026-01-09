@@ -215,6 +215,9 @@ def analyze_bag(bag_path: str, out_prefix: str) -> Dict[str, object]:
         '/metrics/path_lateral_error',
         '/ground_truth_odom',
         '/cmd_vel',
+        '/goal_pose',  # For MPC goal timing
+        '/_action/navigate_to_pose/send_goal',  # For Nav2 goal timing
+        '/_action/navigate_to_pose/status',  # For Nav2 completion timing
     ]
 
     series = read_bag_series(bag_path, topics)
@@ -258,8 +261,38 @@ def analyze_bag(bag_path: str, out_prefix: str) -> Dict[str, object]:
         min_distance_value = min(obs_vals)
         collision_detected = min_distance_value < collision_threshold
 
+    # Goal achievement timing - read from meta.json which now has ROS timestamps from benchmark_runner
+    goal_achievement_duration_s = None
+    rrt_computation_time_s = None
+    goal_reached_time_ros = None
+    
+    # Extract goal position for accuracy metrics
+    goal_x = None
+    goal_y = None
+    goal_theta = None
+    
+    # Try to load goal timing from meta.json
+    if xs and ys:
+        bag_dir = os.path.dirname(bag_path)
+        run_dir = os.path.dirname(bag_dir) if 'bag' in os.path.basename(bag_dir) else bag_dir
+        meta_path = os.path.join(run_dir, 'meta.json')
+        
+        if os.path.exists(meta_path):
+            try:
+                with open(meta_path, 'r') as f:
+                    meta = json.load(f)
+                    if 'goal_timing' in meta:
+                        if 'goal_achievement_duration_s' in meta['goal_timing']:
+                            # The meta.json now contains ROS timestamps from benchmark_runner
+                            # This is the actual time from goal publication to goal achievement in ROS time
+                            goal_achievement_duration_s = meta['goal_timing']['goal_achievement_duration_s']
+                        if 'rrt_computation_time_s' in meta['goal_timing']:
+                            # RRT* path computation time (MPC only)
+                            rrt_computation_time_s = meta['goal_timing']['rrt_computation_time_s']
+            except Exception:
+                pass
+
     # Goal accuracy metrics (compare final state to goal)
-    # Try to read goal from meta.json in parent directory
     goal_position_error = None
     goal_heading_error_rad = None
     goal_heading_error_deg = None
@@ -283,10 +316,6 @@ def analyze_bag(bag_path: str, out_prefix: str) -> Dict[str, object]:
                     meta = json.load(f)
                 
                 # Get goal from launch command (check for goal_location or goal_x/y/theta)
-                goal_x = None
-                goal_y = None
-                goal_theta = None
-                
                 if 'launch_cmd' in meta:
                     cmd_str = ' '.join(meta['launch_cmd'])
                     # Extract goal_x, goal_y, goal_theta from command
@@ -340,6 +369,8 @@ def analyze_bag(bag_path: str, out_prefix: str) -> Dict[str, object]:
         'goal_position_error_m': goal_position_error,
         'goal_heading_error_rad': goal_heading_error_rad,
         'goal_heading_error_deg': goal_heading_error_deg,
+        'goal_achievement_duration_s': goal_achievement_duration_s,
+        'rrt_computation_time_s': rrt_computation_time_s,
     }
 
     with open(f"{out_prefix}_summary.json", 'w') as f:

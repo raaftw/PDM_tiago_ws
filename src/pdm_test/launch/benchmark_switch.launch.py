@@ -116,7 +116,7 @@ def generate_launch_description():
 
     declare_goal_delay = DeclareLaunchArgument(
         'goal_delay',
-        default_value='30.0',
+        default_value='10.0',
         description='Seconds to wait before publishing goal (for startup)'
     )
 

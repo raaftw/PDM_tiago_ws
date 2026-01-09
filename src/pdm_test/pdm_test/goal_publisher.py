@@ -150,11 +150,11 @@ class GoalPublisher(Node):
         if not goal_handle.accepted:
             self.get_logger().error('Nav2 goal rejected')
             return
-        
+
         self.get_logger().info('Nav2 goal accepted')
         result_future = goal_handle.get_result_async()
         result_future.add_done_callback(self.goal_result_callback)
-    
+
     def goal_result_callback(self, future):
         result = future.result().result
         self.get_logger().info(f'Nav2 goal result: {result}')

@@ -75,25 +75,60 @@ class GoalTimingMonitor:
         self.mode = mode
         self.goal_set_time = None
         self.goal_complete_time = None
+        self.rrt_computation_time = None  # For MPC: time to compute RRT* path
+        self.ros_time_offset = None  # Will store first ROS timestamp seen
         
         if mode == 'mpc':
-            self.goal_set_pattern = re.compile(r"Goal set to:")
+            # For MPC, goal is published by goal_publisher node
+            self.goal_set_pattern = re.compile(r"goal_publisher.*Publishing goal now")
+            # RRT* path computation time (for reference)
+            self.rrt_path_found_pattern = re.compile(r"rrt_star_planner_node.*Path found with")
             # MPC driving done when it calls hand motion service (heading aligned)
             self.goal_complete_pattern = re.compile(r"Heading aligned! Calling hand motion service")
         else:  # nav2
-            # Nav2: look for goal reaching messages
-            self.goal_set_pattern = re.compile(r"(Received goal|Goal received|Setting goal)")
-            self.goal_complete_pattern = re.compile(r"(Goal succeeded|Task succeeded|Goal reached|Reached goal)")
+            # Nav2: goal published by goal_publisher "Publishing goal now" (same as MPC)
+            self.goal_set_pattern = re.compile(r"goal_publisher.*Publishing goal now")
+            # Nav2 completes when bt_navigator reaches the goal
+            self.goal_complete_pattern = re.compile(r"(Reached goal|Goal succeeded|Goal reached)")
+            self.rrt_path_found_pattern = None
         
+        # Pattern to extract ROS timestamp: [INFO] [1234567890.123456789]
+        self.ros_time_pattern = re.compile(r"\[INFO\]\s+\[(\d+\.\d+)\]")
+    
     def process_line(self, line: str):
-        """Check if line contains goal-related events."""
-        if self.goal_set_time is None and self.goal_set_pattern.search(line):
-            self.goal_set_time = time.time()
-            print(f"[TIMING] Goal published at {self.goal_set_time}")
+        """Check if line contains goal-related events and extract ROS timestamp."""
+        # Extract ROS timestamp from the line if present
+        ros_time_match = self.ros_time_pattern.search(line)
+        if ros_time_match:
+            ros_timestamp = float(ros_time_match.group(1))
+            # Store offset from first ROS timestamp (simulation start)
+            if self.ros_time_offset is None:
+                self.ros_time_offset = ros_timestamp
         
+        # Capture goal publication time (from goal_publisher for both MPC and Nav2)
+        if self.goal_set_time is None and self.goal_set_pattern.search(line):
+            if ros_time_match:
+                self.goal_set_time = float(ros_time_match.group(1))
+                print(f"[TIMING] Goal published at ROS time {self.goal_set_time}")
+            else:
+                self.goal_set_time = time.time()
+                print(f"[TIMING] Goal published at wall clock {self.goal_set_time}")
+        
+        # For MPC: capture RRT* path computation time
+        if self.mode == 'mpc' and self.rrt_path_found_pattern and self.rrt_computation_time is None:
+            if self.rrt_path_found_pattern.search(line) and ros_time_match and self.goal_set_time:
+                rrt_path_time = float(ros_time_match.group(1))
+                self.rrt_computation_time = rrt_path_time - self.goal_set_time
+                print(f"[TIMING] RRT* path computed in {self.rrt_computation_time:.3f}s")
+        
+        # Capture goal completion time
         if self.goal_complete_pattern.search(line):
-            self.goal_complete_time = time.time()
-            print(f"[TIMING] Driving complete, ready for cleaning at {self.goal_complete_time}")
+            if ros_time_match:
+                self.goal_complete_time = float(ros_time_match.group(1))
+                print(f"[TIMING] Driving complete at ROS time {self.goal_complete_time}")
+            else:
+                self.goal_complete_time = time.time()
+                print(f"[TIMING] Driving complete at wall clock {self.goal_complete_time}")
     
     def get_goal_duration(self) -> dict:
         """Return timing info as dict."""
@@ -101,6 +136,7 @@ class GoalTimingMonitor:
             'goal_set_time': self.goal_set_time,
             'goal_complete_time': self.goal_complete_time,
             'goal_achievement_duration_s': None,
+            'rrt_computation_time_s': self.rrt_computation_time,
         }
         if self.goal_set_time and self.goal_complete_time:
             result['goal_achievement_duration_s'] = round(self.goal_complete_time - self.goal_set_time, 3)

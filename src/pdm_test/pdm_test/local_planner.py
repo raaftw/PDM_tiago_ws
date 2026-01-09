@@ -28,26 +28,24 @@ class MpcController(Node):
         self.dt = float(self.declare_parameter('dt', 0.1).value)
         
         # MPC-specific parameters
-        self.Q_x = float(self.declare_parameter('Q_x', 60.0).value)
-        self.Q_y = float(self.declare_parameter('Q_y', 60.0).value)
-        self.Q_theta = float(self.declare_parameter('Q_theta', 0.0).value)
+        self.Q_x = float(self.declare_parameter('Q_x', 50.0).value)
+        self.Q_y = float(self.declare_parameter('Q_y', 50.0).value)
 
-        self.R_v = float(self.declare_parameter('R_v', 0.6).value)
-        self.R_omega = float(self.declare_parameter('R_omega', 0.05).value)
+        self.R_v = float(self.declare_parameter('R_v', 0.8).value)
+        self.R_omega = float(self.declare_parameter('R_omega', 0.02).value)
 
-        self.Q_f_x = float(self.declare_parameter('Q_f_x', 20.0).value)
-        self.Q_f_y = float(self.declare_parameter('Q_f_y', 20.0).value)
-        self.Q_f_theta = float(self.declare_parameter('Q_f_theta', 0.0).value)
+        self.Q_f_x = float(self.declare_parameter('Q_f_x', 80.0).value)
+        self.Q_f_y = float(self.declare_parameter('Q_f_y', 80.0).value)
 
         self.mpc_horizon = int(self.declare_parameter('mpc_horizon', 15).value)
-        self.optimizer_maxiter = int(self.declare_parameter('optimizer_maxiter', 100).value)
+        self.optimizer_maxiter = int(self.declare_parameter('optimizer_maxiter', 200).value)
 
         self._scan_points_buffer = []
 
         # Tiago constraints
         tiago_model = TiagoDifferentialDriveModel(dt=self.dt)
         self.max_v = float(self.declare_parameter('max_v', tiago_model.v_max).value)
-        self.v_min = float(self.declare_parameter('v_min', -0.1).value)  # Allow slow backward motion
+        self.v_min = float(self.declare_parameter('v_min', tiago_model.v_min).value)
         self.max_omega = float(self.declare_parameter('max_omega', tiago_model.omega_max).value)
         self.min_omega = float(self.declare_parameter('min_omega', tiago_model.omega_min).value)
 
@@ -69,7 +67,20 @@ class MpcController(Node):
         self.get_logger().info(f'Local planner initialized. MPC horizon: {self.mpc_horizon}, dt: {self.dt}s')
 
 
-        # ============ STATE MACHINE (Phase 1, 2, 3) ============
+        # self.goal_slow_radius = float(self.declare_parameter('goal_slow_radius', 0.5).value)
+        # self.v_des_weight = float(self.declare_parameter('v_des_weight', 12.0).value)
+        # self.v_stop_weight = float(self.declare_parameter('v_stop_weight', 20.0).value)
+        # self.v_goal_cap = float(self.declare_parameter('v_goal_cap', 0.35).value)  # optional cap inside zone
+        # self.omega_relax_factor_min = float(self.declare_parameter('omega_relax_factor_min', 0.3).value)
+        # self.slowdown_exponent = float(self.declare_parameter('slowdown_exponent', 2.5).value)
+
+        # Simple goal brake
+        self.brake_weight = float(self.declare_parameter('brake_weight', 35.0).value)
+        self.brake_radius = float(self.declare_parameter('brake_radius', 0.4).value)
+
+
+
+        # ============ STATE MACHINE TO TRACK STATE OF CONTROLLER ============
         # Failure tracking
         self.consecutive_failures = 0
         self.consecutive_zeros = 0
@@ -80,9 +91,7 @@ class MpcController(Node):
         
         # Goal tracking
         self.goal_pose = None  # Will store goal when path received
-        self.goal_distance_threshold = 0.10  # 10cm radius for goal success
-        self.goal_entry_time = None  # Time when robot entered goal radius
-        self.goal_hold_duration = 2.0  # Must stay in goal radius for 2 seconds
+        self.goal_distance_threshold = 0.5  # meters
         
         # At-goal heading 
         self.target_heading_goal = 1.0  # Global frame 
@@ -123,67 +132,44 @@ class MpcController(Node):
             # Try to compute MPC control
             v, omega = self.compute_control(self.current_state, self.reference_path)
             
-            # Check if within goal radius
-            if self.goal_pose is not None:
-                dist_to_goal = np.linalg.norm(self.current_state[:2] - self.goal_pose[:2])
-                
-                if dist_to_goal < self.goal_distance_threshold:
-                    # Entered goal radius
-                    if self.goal_entry_time is None:
-                        self.goal_entry_time = time.time()
-                        self.get_logger().info(f'Entered goal radius (dist={dist_to_goal:.3f}m, need to stay for {self.goal_hold_duration}s)')
-                    
-                    # Check if held for required duration
-                    time_in_goal = time.time() - self.goal_entry_time
-                    if time_in_goal >= self.goal_hold_duration:
-                        self.get_logger().info(f'Goal achieved! Stayed in radius for {time_in_goal:.2f}s')
-                        self.controller_state = ControllerState.AT_GOAL
-                        v, omega = 0.0, 0.0
-                else:
-                    # Left goal radius, reset timer
-                    if self.goal_entry_time is not None:
-                        self.get_logger().debug(f'Left goal radius, timer reset (dist={dist_to_goal:.3f}m)')
-                    self.goal_entry_time = None
+            # Track failures (Phase 1)
+            if math.isnan(v) or math.isnan(omega):
+                # MPC solver failed
+                self.consecutive_failures += 1
+                self.consecutive_zeros = 0
+            elif abs(v) < 5e-2 and abs(omega) < 0.16:
+                # MPC output is zero (might be stuck)
+                self.consecutive_zeros += 1
+                self.consecutive_failures = 0
+            else:
+                # Normal control output
+                self.consecutive_failures = 0
+                self.consecutive_zeros = 0
             
-            # Track failures only if not in goal radius
-            if self.goal_entry_time is None:  # Only track failures outside goal radius
-                if math.isnan(v) or math.isnan(omega):
-                    # MPC solver failed
-                    self.consecutive_failures += 1
-                    self.consecutive_zeros = 0
-                elif abs(v) < 1e-2 and abs(omega) < 0.16:
-                    # MPC output is zero (might be stuck)
-                    self.consecutive_zeros += 1
-                    self.consecutive_failures = 0
-                else:
-                    # Normal control output
-                    self.consecutive_failures = 0
-                    self.consecutive_zeros = 0
-                
-                # Check if stuck outside goal radius (Phase 1: timeout)
-                if self.consecutive_failures > self.failure_timeout_steps or self.consecutive_zeros > self.failure_timeout_steps * 3:
-                    self.get_logger().warn(f'STUCK FAILURE: failures={self.consecutive_failures}, zeros={self.consecutive_zeros}, not in goal radius')
-                    self.controller_state = ControllerState.STUCK
-                    v, omega = 0.0, 0.0  # Stop immediately
+            # Check if stuck (Phase 1: timeout)
+            if self.consecutive_failures > self.failure_timeout_steps or self.consecutive_zeros > self.failure_timeout_steps * 2:
+                self.get_logger().warn(f'STUCK detected: failures={self.consecutive_failures}, zeros={self.consecutive_zeros}')
+                self.controller_state = ControllerState.STUCK
+                v, omega = 0.0, 0.0  # Stop immediately
             
         elif self.controller_state == ControllerState.STUCK:
-            # Robot got stuck outside goal radius - this is a failure
+            # Determine if at goal or need to replan (Phase 2)
             if self.goal_pose is None:
                 self.get_logger().warn('STUCK but goal_pose is None, stopping')
                 v, omega = 0.0, 0.0
             else:
-                # Check if now within goal radius
+                # Calculate distance to goal
                 dist_to_goal = np.linalg.norm(self.current_state[:2] - self.goal_pose[:2])
-                self.get_logger().warn(f'STUCK OUTSIDE GOAL: distance_to_goal={dist_to_goal:.2f}m (goal_radius={self.goal_distance_threshold}m)')
+                self.get_logger().info(f'STUCK state: distance_to_goal={dist_to_goal:.2f}m (threshold={self.goal_distance_threshold}m)')
                 
                 if dist_to_goal < self.goal_distance_threshold:
-                    # Managed to get to goal after getting stuck - still success
-                    self.get_logger().info('Got to goal after being stuck - goal achieved!')
+                    # At goal: transition to AT_GOAL
+                    self.get_logger().info('Transitioning to AT_GOAL state')
                     self.controller_state = ControllerState.AT_GOAL
-                    v, omega = 0.0, 0.0
+                    v, omega = 0.0, 0.0  # Stop
                 else:
-                    # Failed - stuck and far from goal
-                    self.get_logger().error('TASK FAILED: Robot stuck and not within goal radius')
+                    # Far from goal: for now, stay stopped (Phase 4 will add replanning)
+                    self.get_logger().info('Stuck far from goal - replanning not yet implemented')
                     v, omega = 0.0, 0.0
         
         elif self.controller_state == ControllerState.AT_GOAL:
@@ -210,7 +196,7 @@ class MpcController(Node):
                     self.get_logger().info('Heading aligned! Calling hand motion service...')
                     self._call_hand_motion()
                     self.hand_motion_called = True
-                    v, omega = 0.0, 0.0
+                    # self.exiting = True
                     v, omega = 0.0, 0.0
             else:
                 # Hand motion already called, stay stopped
@@ -264,7 +250,6 @@ class MpcController(Node):
         # Store goal pose (last point in path)
         if len(path_array) > 0:
             self.goal_pose = path_array[-1]  # [x, y, theta]
-            self.target_heading_goal = path_array[-1][2]  # Use heading from goal
             self.get_logger().info(f'Goal set to: x={self.goal_pose[0]:.2f}, y={self.goal_pose[1]:.2f}, theta={self.goal_pose[2]:.2f}')
         
         # Reset state machine when new path arrives
@@ -272,7 +257,6 @@ class MpcController(Node):
         self.consecutive_failures = 0
         self.consecutive_zeros = 0
         self.hand_motion_called = False
-        self.goal_entry_time = None  # Reset goal timer on new path
         
         # First interpolate to get a smoother path
         if len(path_array) > 1:
@@ -333,7 +317,7 @@ class MpcController(Node):
         
         for r in msg.ranges:
             
-            if r > 0.27 and r >= msg.range_min and r <= msg.range_max:
+            if r > 0.23 and r >= msg.range_min and r <= msg.range_max:
                 # Check if this point is in the front FOV
                 if fov_min <= angle <= fov_max:
                     px_robot = r * np.cos(angle)
@@ -401,6 +385,8 @@ class MpcController(Node):
         
         # ==================== CASADI OPTIMIZATION ====================
         opti = ca.Opti()
+
+        
         
         # Variables
         X = opti.variable(3, N + 1)  # States: x, y, theta
@@ -408,43 +394,135 @@ class MpcController(Node):
         
         # Cost function
         cost = 0
+
+        # Simple goal proximity brake: penalize speed when close
+        if getattr(self, 'goal_pose', None) is not None:
+            dist_goal = float(np.linalg.norm(state[:2] - self.goal_pose[:2]))
+            goal_target = self.goal_pose.reshape(3, 1)
+        else:
+            dist_goal = float(np.linalg.norm(state[:2] - ref_traj[-1, :2]))
+            goal_target = ref_traj[-1, :].reshape(3, 1)
+
+        # Brake factor: ramps from 0 (far) to strong (close)
+        brake_radius = 0.4  # meters
+        if dist_goal < brake_radius:
+            brake_factor = (brake_radius - dist_goal) / brake_radius  # 0→1 as you get closer
+        else:
+            brake_factor = 0.0
+
+        # Add speed penalty near goal
+        brake_weight = 25.0  # tune 15–40
+        for k in range(N):
+            cost += brake_weight * brake_factor * U[0, k]**2
+
+
+
         for k in range(N):
             state_error = X[:, k] - ref_traj[k, :].reshape(3, 1)
             cost += self.Q_x * state_error[0]**2
             cost += self.Q_y * state_error[1]**2
-            cost += self.Q_theta * state_error[2]**2
 
-            # cost += self.R_v * U[0, k]**2
-
-            backward_penalty = 100.0  # Factor to penalize backward motion
-            cost += self.R_v * U[0, k]**2  # Base velocity cost
-            # cost += 1.0 * (U[0, k] - 0.5)**2  # penalize deviation from v_ref (0m5)
-
-            # cost += backward_penalty * ca.fmax(0, -U[0, k])**2  # Extra penalty when v < 0
-
+            # Base effort costs with omega relaxed near goal
+            cost += self.R_v * U[0, k]**2
             cost += self.R_omega * U[1, k]**2
+
+            # Goal brake: penalize speed when close
+            cost += self.brake_weight * brake_factor * U[0, k]**2
+
         
-        # Heading alignment cost (so it doesnt drive backwards)
-        for k in range(N-1):
-            dx = ref_traj[k+1,0] - ref_traj[k,0]
-            dy = ref_traj[k+1,1] - ref_traj[k,1]
-            ref_heading = ca.atan2(dy, dx + 1e-6)
-            heading_error = X[2,k] - ref_heading
-            cost += 5.0 * heading_error**2 
+
+
+        # lookahead_idx = min(5, len(ref_traj) - 1)  # 2 steps ahead
+        # target_x = ref_traj[lookahead_idx, 0]
+        # target_y = ref_traj[lookahead_idx, 1]
+
+        # dx = target_x - X[0, 0]
+        # dy = target_y - X[1, 0]
+        # desired_heading = ca.atan2(dy, dx)
+        # heading_error = ca.atan2(ca.sin(X[2, 0] - desired_heading), ca.cos(X[2, 0] - desired_heading))
+
+        # self.get_logger().info(f'Heading error:, {heading_error}')
+        # cost += 5.0 * heading_error**2
+
+        # Lookahead target (k=0 → lookahead 2-3 steps is smoother)
+        # lookahead_idx = min(3, N - 1)
+        # dx = ref_traj[lookahead_idx, 0] - X[0, 0]
+        # dy = ref_traj[lookahead_idx, 1] - X[1, 0]
+
+        # # Unit vector toward target
+        # norm = ca.sqrt(dx*dx + dy*dy) + 1e-9
+        # ux = dx / norm
+        # uy = dy / norm
+
+        # # Heading unit vector
+        # hx = ca.cos(X[2, 0])
+        # hy = ca.sin(X[2, 0])
+
+        
+
+        # # Single-step heading error toward a lookahead point
+        # lookahead_idx = min(2, N - 1)  # 2–4 is a good range
+        # dx0 = ref_traj[lookahead_idx, 0] - X[0, 0]
+        # dy0 = ref_traj[lookahead_idx, 1] - X[1, 0]
+
+        # # Unit vector to target
+        # norm0 = ca.sqrt(dx0*dx0 + dy0*dy0) + 1e-9
+        # ux0 = dx0 / norm0
+        # uy0 = dy0 / norm0
+
+        # # Heading unit vector
+        # hx0 = ca.cos(X[2, 0])
+        # hy0 = ca.sin(X[2, 0])
+
+        # # Alignment error in [0, 2]: 0 = perfect alignment, 2 = opposite
+        # align_err = 1.0 - (hx0*ux0 + hy0*uy0)
+    
+        # w_gate = 30.0  # tune 10–40
+        # # for k in range(N):
+        # #     cost += w_gate * align_err * U[0, k]**2
+
+        # turn_cost_weight = 0.5  # penalize not turning when misaligned
+        # min_turn = 0.2  # rad/s
+
+        # for k in range(N):
+        #     cost += w_gate * align_err * U[0, k]**2
+            
+        #     # Penalize insufficient turning when misaligned
+        #     turn_cost = ca.fmax(0, min_turn - ca.fabs(U[1, k]))
+        #     cost += turn_cost_weight * align_err * turn_cost**2
+
+
+        w_heading = 5.0  # tune 5–12
+        window = min(5, N)  # penalize heading for first 5 steps
+
+        for k in range(window):
+            lookahead_idx = min(k + 2, N - 1)
+            dx = ref_traj[lookahead_idx, 0] - X[0, k]
+            dy = ref_traj[lookahead_idx, 1] - X[1, k]
+            
+            norm = ca.sqrt(dx*dx + dy*dy) + 1e-9
+            ux = dx / norm
+            uy = dy / norm
+            
+            hx = ca.cos(X[2, k])
+            hy = ca.sin(X[2, k])
+            
+            align_err = 1.0 - (hx*ux + hy*uy)
+            cost += w_heading * align_err**2
+
 
         # Smoothness cost (to avoid wobbling)
         for k in range(N - 1):
             v_change = U[0, k+1] - U[0, k]
             omega_change = U[1, k+1] - U[1, k]
-            cost += 0.0 * v_change**2         # tune 0.5–2.0
-            cost += 2.0 * omega_change**2     # tune 2.0–6.0
+            cost += 0.0 * v_change**2         
+            cost += 1.5 * omega_change**2     
 
-        # Terminal cost
-        final_error = X[:, N] - ref_traj[-1, :].reshape(3, 1)
+
+        # Terminal cost toward actual goal
+        final_error = X[:, N] - goal_target
         cost += self.Q_f_x * final_error[0]**2
         cost += self.Q_f_y * final_error[1]**2
-        
-        
         
         # ==================== CONSTRAINTS ====================
         
@@ -470,6 +548,7 @@ class MpcController(Node):
         # Control bounds
         opti.subject_to(U[0, :] >= self.v_min)
         opti.subject_to(U[0, :] <= self.max_v)
+        opti.subject_to(U[0, :] >= self.v_min)
         opti.subject_to(U[1, :] >= -self.max_omega)
         opti.subject_to(U[1, :] <= self.max_omega)
 
@@ -482,7 +561,7 @@ class MpcController(Node):
             # Find top closest obstacles (not just 1)
             distances_to_robot = [(np.sqrt((p[0]-state[0])**2 + (p[1]-state[1])**2), p) for p in scan_points]
             distances_to_robot.sort(key=lambda x: x[0])
-            closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  # Top 3 closest
+            closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  
             
             obstacle_penalty_weight = 50.0
 
@@ -502,7 +581,7 @@ class MpcController(Node):
                     violation = ca.fmax(0, d_preferred - min_dist)
                     cost += obstacle_penalty_weight * violation**2
 
-
+        
 
         # ==================== SOLVE ====================
 
@@ -523,6 +602,9 @@ class MpcController(Node):
 
             v_opt = float(sol.value(U[0, 0]))
             omega_opt = float(sol.value(U[1, 0]))
+
+            heading_err_val = float(sol.value(align_err))
+            self.get_logger().info(f'Heading align error: {heading_err_val:.3f}')
 
             self.get_logger().info(f'MPC solved in {solve_ms:.1f} ms: v={v_opt:.3f}, omega={omega_opt:.3f}')
             return v_opt, omega_opt
