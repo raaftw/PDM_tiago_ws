@@ -382,8 +382,6 @@ class MpcController(Node):
         
         # ==================== CASADI OPTIMIZATION ====================
         opti = ca.Opti()
-
-        
         
         # Variables
         X = opti.variable(3, N + 1)  # States: x, y, theta
@@ -572,7 +570,7 @@ class MpcController(Node):
         except Exception as e:
             self.get_logger().warn(f'Hand motion future error: {e}')
         
-        # Pause MPC and wait for new path (don't shut down!)
+        # Pause MPC and wait for new path
         self.controller_state = ControllerState.WAITING
         self.reference_path = None
         self.hand_motion_called = False
