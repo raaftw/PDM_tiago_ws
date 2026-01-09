@@ -42,6 +42,12 @@ class MpcController(Node):
 
         self._scan_points_buffer = []
 
+        # Obstacle avoidance parameters
+        self.d_safe = float(self.declare_parameter('d_safe', 0.35).value)  # safety distance in meters
+        self.d_preferred = float(self.declare_parameter('d_preferred', 0.7).value)  # preferred distance in meters
+        self.obstacle_penalty_weight = float(self.declare_parameter('obstacle_penalty_weight', 60.0).value)
+
+
         # Tiago constraints
         tiago_model = TiagoDifferentialDriveModel(dt=self.dt)
         self.max_v = float(self.declare_parameter('max_v', tiago_model.v_max).value)
@@ -67,10 +73,10 @@ class MpcController(Node):
         self.get_logger().info(f'Local planner initialized. MPC horizon: {self.mpc_horizon}, dt: {self.dt}s')
 
 
-        # Simple goal brake
+        # VSimple goal brake
         self.brake_weight = float(self.declare_parameter('brake_weight', 25.0).value)
         self.brake_radius = float(self.declare_parameter('brake_radius', 0.4).value)
-
+        self.smoothness_weight = 2.00
 
 
         # ============ STATE MACHINE TO TRACK STATE OF CONTROLLER ============
@@ -131,7 +137,7 @@ class MpcController(Node):
                 self.consecutive_failures += 1
                 self.consecutive_zeros = 0
             elif abs(v) < 5e-2 and abs(omega) < 0.16:
-                # MPC output is zero (might be stuck)
+                # MPC output is zero 
                 self.consecutive_zeros += 1
                 self.consecutive_failures = 0
             else:
@@ -139,14 +145,14 @@ class MpcController(Node):
                 self.consecutive_failures = 0
                 self.consecutive_zeros = 0
             
-            # Check if stuck (Phase 1: timeout)
+            # Check if stuck 
             if self.consecutive_failures > self.failure_timeout_steps or self.consecutive_zeros > self.failure_timeout_steps * 2:
                 self.get_logger().warn(f'STUCK detected: failures={self.consecutive_failures}, zeros={self.consecutive_zeros}')
                 self.controller_state = ControllerState.STUCK
                 v, omega = 0.0, 0.0  # Stop immediately
             
         elif self.controller_state == ControllerState.STUCK:
-            # Determine if at goal or need to replan (Phase 2)
+            # Determine if at goal or need to replan 
             if self.goal_pose is None:
                 self.get_logger().warn('STUCK but goal_pose is None, stopping')
                 v, omega = 0.0, 0.0
@@ -166,7 +172,7 @@ class MpcController(Node):
                     v, omega = 0.0, 0.0
         
         elif self.controller_state == ControllerState.AT_GOAL:
-            # At goal: turn to target heading and call hand motion (Phase 3)
+            # At goal: turn to target heading and call hand motion 
             if not self.hand_motion_called:
                 # First, turn to target heading
                 current_heading = self.current_state[2]
@@ -414,11 +420,6 @@ class MpcController(Node):
             # Goal brake: penalize speed when close
             cost += self.brake_weight * brake_factor * U[0, k]**2
 
-            # Strong penalty for backward motion (v < 0)
-            backward_penalty_weight = 4000.0
-            neg_v = ca.fmax(0, -U[0, k])  # ReLU(-v)
-            cost += backward_penalty_weight * neg_v**2
-
 
         w_heading = 5.0  # tune 5–12
         window = min(5, N)  # penalize heading for first 5 steps
@@ -441,9 +442,9 @@ class MpcController(Node):
 
         # Smoothness cost (to avoid wobbling)
         for k in range(N - 1):
-            v_change = U[0, k+1] - U[0, k]
             omega_change = U[1, k+1] - U[1, k]
-            cost += 2.0 * omega_change**2     
+            
+            cost += self.smoothness_weight * omega_change**2     
 
         # Terminal cost toward actual goal
         final_error = X[:, N] - goal_target
@@ -479,8 +480,6 @@ class MpcController(Node):
         opti.subject_to(U[1, :] >= -self.max_omega)
         opti.subject_to(U[1, :] <= self.max_omega)
 
-        d_safe = 0.35  # safety distance in meters
-        d_preferred = 0.7  # preferred distance in meters
         scan_points = self._scan_points_buffer if hasattr(self, '_scan_points_buffer') else []
         
 
@@ -490,9 +489,6 @@ class MpcController(Node):
             distances_to_robot.sort(key=lambda x: x[0])
             closest_n_obstacles = [p for _, p in distances_to_robot[:3]]  
             
-            obstacle_penalty_weight = 60.0
-
-
             for k in range(N + 1):
                 min_dist = None
                 for px, py in closest_n_obstacles:
@@ -503,11 +499,11 @@ class MpcController(Node):
                         min_dist = ca.fmin(min_dist, dist)
                 
                 if min_dist is not None:
-                    opti.subject_to(min_dist >= d_safe)
+                    opti.subject_to(min_dist >= self.d_safe)
 
                     # Soft penalty for preferred distance
-                    violation = ca.fmax(0, d_preferred - min_dist)
-                    cost += obstacle_penalty_weight * violation**2
+                    violation = ca.fmax(0, self.d_preferred - min_dist)
+                    cost += self.obstacle_penalty_weight * violation**2
 
         
 
@@ -612,6 +608,4 @@ def main(args=None):
         node.destroy_node()
         if rclpy.ok():  # only shut down if not already done
             rclpy.shutdown()
-    # rclpy.spin(node)
-    # node.destroy_node()
-    # rclpy.shutdown()
+            
