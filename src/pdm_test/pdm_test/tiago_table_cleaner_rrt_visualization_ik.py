@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import time
+import json
 from typing import Dict, List, Optional, Tuple
 
 import rclpy
@@ -14,7 +16,7 @@ from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from geometry_msgs.msg import PoseStamped, Point
 from visualization_msgs.msg import Marker, MarkerArray
-from std_msgs.msg import ColorRGBA
+from std_msgs.msg import ColorRGBA, String
 
 from moveit_msgs.srv import GetPositionIK, GetPositionFK
 from moveit_msgs.msg import RobotState
@@ -38,10 +40,10 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
     def __init__(self):
         super().__init__("tiago_table_cleaner_rrt_visualization_ik")
 
-        # --- Callback group (reentrant for async IK/FK + services + timers) ---
+        # Callback group (IK/FK + services + timers)
         self.cb_group = ReentrantCallbackGroup()
 
-        # --- Publishers ---
+        # Publishers
         self.arm_pub = self.create_publisher(
             JointTrajectory, "/arm_controller/joint_trajectory", 10
         )
@@ -51,15 +53,24 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             MarkerArray, "/rrt_debug_markers", 10
         )
 
+        # Metrics topic (JSON)
+        self.metrics_pub = self.create_publisher(
+            String, "/arm_planner_metrics", 10
+        )
+
+        # Cumulative success stats across /clean_table calls
+        self._runs_total = 0
+        self._runs_success = 0
+
         self.down_orientation = None
 
-        # --- Joint state subscriber ---
+        # Joint state subscriber 
         self._latest_joint_state: Optional[JointState] = None
         self.create_subscription(
             JointState, "/joint_states", self._js_cb, 10, callback_group=self.cb_group
         )
 
-        # --- MoveIt service clients ---
+        # MoveIt service clients
         self.ik_client = self.create_client(
             GetPositionIK, "/compute_ik", callback_group=self.cb_group
         )
@@ -67,27 +78,27 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             GetPositionFK, "/compute_fk", callback_group=self.cb_group
         )
 
-        # --- Service trigger ---
+        # Service trigger
         self.create_service(
             Trigger, "/clean_table", self._srv_clean_table, callback_group=self.cb_group
         )
 
-        # --- MoveIt config ---
+        # MoveIt config 
         self.moveit_group_name = "arm"
         self.moveit_ee_link = "gripper_tool_link"
         self.planning_frame = "base_link"
 
-        # --- Poses ---
+        # Poses
         self.preclean_q: List[float] = [0.25, 1.0, 0.0, 2.2, -1.2, 0.7, 0.5]
         self.rest_q: List[float] = [0.50, -1.34, -0.48, 1.94, -1.49, 1.37, 0.00]
 
-        # Cartesian waypoints (base_link) - zig-zag
+        # Cartesian waypoints (with respect to base_link) - zig-zag
         self.cartesian_waypoints: List[Tuple[float, float, float]] = [
-            (0.5, -0.2, 0.65),
-            (0.75, -0.1, 0.65),
-            (0.5,  0.0, 0.65),
-            (0.75,  0.1, 0.65),
-            (0.5,  0.2, 0.65),
+            (0.5, -0.2, 0.7),
+            (0.75, -0.1, 0.7),
+            (0.5,  0.0, 0.7),
+            (0.75,  0.1, 0.7),
+            (0.5,  0.2, 0.7),
         ]
 
         # Table collision box (base_link frame)
@@ -97,7 +108,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             "z": (0.45, 0.6),
         }
 
-        # --- Pipeline flags/state ---
+        # Pipeline flags/state
         self._pipeline_running = False
         self._trigger_requested = False
 
@@ -106,13 +117,13 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         self._ik_joint_waypoints: List[List[float]] = []
         self._q_start: Optional[List[float]] = None
 
-        # --- Deterministic RRT visualization storage (joint-space edges) ---
+        # Deterministic RRT visualization (joint-space edges)
         self._rrt_edges_q: List[Tuple[List[float], List[float]]] = []
 
-        # FK cache (helps a bit during drawing)
+        
         self._fk_cache: Dict[str, Point] = {}
 
-        # --- Planner (RRT-Connect) with edge callback ---
+        # Planner (RRT-Connect) with edge callback
         self.planner = RRTConnect(
             is_state_valid=self.is_state_valid,
             is_edge_valid=self.is_edge_valid,
@@ -127,7 +138,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             0.1, self._timer_check_trigger, callback_group=self.cb_group
         )
 
-        # Wait for services
+        
         self._wait_for_services()
         self._init_down_orientation_from_preclean()
 
@@ -136,8 +147,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             "Call /clean_table to run."
         )
 
-    # ------------------- Pipeline reset helper -------------------
-
+    
     def _reset_pipeline(self) -> None:
         self._pipeline_running = False
         self._ik_index = 0
@@ -146,9 +156,82 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         self._fk_cache = {}
         self.get_logger().info("Pipeline state reset; ready for next /clean_table.")
 
-    # ------------------- ROS plumbing -------------------
+    # Metrics helpers 
+    
+    def _path_length_jointspace(self, path: List[List[float]]) -> float:
+        
+        if not path or len(path) < 2:
+            return 0.0
+        total = 0.0
+        for a, b in zip(path[:-1], path[1:]):
+            total += self.planner._dist(a, b)
+        return float(total)
+
+    def _straight_line_distance_jointspace(self, q_start: List[float], q_goal: List[float]) -> float:
+        
+        return float(self.planner._dist(q_start, q_goal))
+
+    def _smoothness_second_difference(self, path: List[List[float]]) -> float:
+        
+        if not path or len(path) < 3:
+            return 0.0
+        total = 0.0
+        for qm1, q0, qp1 in zip(path[:-2], path[1:-1], path[2:]):
+            dd = [(a - 2.0 * b + c) for a, b, c in zip(qp1, q0, qm1)]
+            total += (sum(x * x for x in dd) ** 0.5)
+        return float(total)
+
+    def _publish_metrics(
+        self,
+        success: bool,
+        planning_time_s: float,
+        nodes_added: int,
+        path_length: float,
+        straight_line_distance: float,
+        extra_length: float,
+        detour_ratio: float,
+        smoothness: float,
+        segments_planned: int,
+        segments_total: int,
+    ) -> None:
+        
+        if success:
+            self._runs_success += 1
+
+        msg = {
+            "timestamp_ns": int(self.get_clock().now().nanoseconds),
+            "success": bool(success),
+            "planning_time_s": float(planning_time_s),
+            "nodes_added": int(nodes_added),
+            "path_length": float(path_length),
+            "straight_line_distance": float(straight_line_distance),
+            "extra_length": float(extra_length),
+            "detour_ratio": float(detour_ratio),
+            "smoothness": float(smoothness),
+            "segments_planned": int(segments_planned),
+            "segments_total": int(segments_total),
+            "runs_total": int(self._runs_total),
+            "runs_success": int(self._runs_success),
+            "success_rate": float(self._runs_success / self._runs_total) if self._runs_total > 0 else 0.0,
+        }
+
+        out = String()
+        out.data = json.dumps(msg)
+        self.metrics_pub.publish(out)
+
+        self.get_logger().info(
+            f"[ARM_METRICS] success={success} time={planning_time_s:.3f}s "
+            f"nodes={nodes_added} pathLen={path_length:.3f} straight={straight_line_distance:.3f} "
+            f"extra={extra_length:.3f} ratio={detour_ratio:.3f} smooth={smoothness:.3f} "
+            f"segments={segments_planned}/{segments_total} "
+            f"cumSuccess={self._runs_success}/{self._runs_total} "
+            f"rate={msg['success_rate']:.3f}"
+        )
+
+    # ROS plumbing 
+
     def _init_down_orientation_from_preclean(self) -> None:
-        """Use FK on preclean_q to get a feasible 'gripper down' orientation."""
+        
         req = GetPositionFK.Request()
         req.header.frame_id = self.planning_frame
         req.fk_link_names = [self.moveit_ee_link]
@@ -208,7 +291,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             self._trigger_requested = False
             self._start_pipeline()
 
-    # ------------------- Joint helpers -------------------
+    # Joint helpers 
 
     def get_current_q(self) -> Optional[List[float]]:
         if self._latest_joint_state is None:
@@ -220,24 +303,21 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             return None
 
     def is_state_valid(self, q: List[float]) -> bool:
-        # Joint limits
         if not all(lo <= qi <= hi for qi, (lo, hi) in zip(q, JOINT_LIMITS)):
             return False
 
-        # FK to get EE position
         p = self._fk_point_sync(q)
         if p is None:
             return False
 
-        # Check against table box
         xb, yb, zb = self.table_box["x"], self.table_box["y"], self.table_box["z"]
         if xb[0] <= p.x <= xb[1] and yb[0] <= p.y <= yb[1] and zb[0] <= p.z <= zb[1]:
-            return False  # inside table volume
+            return False
 
         return True
 
     def is_edge_valid(self, q1: List[float], q2: List[float]) -> bool:
-        samples = 10  # more = safer, slower
+        samples = 10
         for i in range(samples + 1):
             alpha = i / samples
             q = [(1 - alpha) * a + alpha * b for a, b in zip(q1, q2)]
@@ -245,8 +325,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
                 return False
         return True
 
-    # ------------------- Pipeline (async IK -> RRT -> publish) -------------------
-
+    # Pipeline (IK -> RRT -> publish)
     def _start_pipeline(self) -> None:
         self._pipeline_running = True
         self.get_logger().info("Starting pipeline...")
@@ -254,17 +333,42 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         self._q_start = self.get_current_q()
         if self._q_start is None:
             self.get_logger().error("No joint state. Aborting.")
+            self._runs_total += 1
+            self._publish_metrics(
+                success=False,
+                planning_time_s=0.0,
+                nodes_added=0,
+                path_length=0.0,
+                straight_line_distance=0.0,
+                extra_length=0.0,
+                detour_ratio=0.0,
+                smoothness=0.0,
+                segments_planned=0,
+                segments_total=0,
+            )
             self._reset_pipeline()
             return
 
         if not (self.ik_client.service_is_ready() and self.fk_client.service_is_ready()):
             self.get_logger().error("IK/FK services not ready. Aborting.")
+            self._runs_total += 1
+            self._publish_metrics(
+                success=False,
+                planning_time_s=0.0,
+                nodes_added=0,
+                path_length=0.0,
+                straight_line_distance=0.0,
+                extra_length=0.0,
+                detour_ratio=0.0,
+                smoothness=0.0,
+                segments_planned=0,
+                segments_total=0,
+            )
             self._reset_pipeline()
             return
 
         self._clear_markers()
 
-        # reset IK and RRT debug storage
         self._ik_joint_waypoints = []
         self._ik_index = 0
         self._rrt_edges_q = []
@@ -272,15 +376,28 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
         self._call_ik_for_current_waypoint()
 
-    # ------------------- IK chain (callback-based) -------------------
+    # IK chain
 
     def _call_ik_for_current_waypoint(self) -> None:
         if self._ik_index >= len(self.cartesian_waypoints):
-            # All waypoints processed
             if not self._ik_joint_waypoints:
                 self.get_logger().error("All IK waypoints failed. Resetting pipeline.")
+                self._runs_total += 1
+                self._publish_metrics(
+                    success=False,
+                    planning_time_s=0.0,
+                    nodes_added=0,
+                    path_length=0.0,
+                    straight_line_distance=0.0,
+                    extra_length=0.0,
+                    detour_ratio=0.0,
+                    smoothness=0.0,
+                    segments_planned=0,
+                    segments_total=0,
+                )
                 self._reset_pipeline()
                 return
+
             self.get_logger().info("All IK waypoints solved. Starting RRT planning...")
             self._run_rrt_and_publish()
             return
@@ -296,20 +413,16 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         pose.pose.position.y = y
         pose.pose.position.z = z
 
-        # Use FK-derived 'gripper down' orientation if available
         if self.down_orientation is not None:
             pose.pose.orientation = self.down_orientation
         else:
-            # Fallback: identity
             pose.pose.orientation.w = 1.0
 
-        # Build IK request
         req = GetPositionIK.Request()
         req.ik_request.group_name = self.moveit_group_name
         req.ik_request.pose_stamped = pose
         req.ik_request.ik_link_name = self.moveit_ee_link
 
-        # Seed with previous IK solution if available, else current joints
         if self._ik_joint_waypoints:
             seed_q = self._ik_joint_waypoints[-1]
         else:
@@ -332,6 +445,19 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
                 res = future.result()
             except Exception as e:
                 self.get_logger().error(f"IK exception at waypoint {index+1}: {e}")
+                self._runs_total += 1
+                self._publish_metrics(
+                    success=False,
+                    planning_time_s=0.0,
+                    nodes_added=0,
+                    path_length=0.0,
+                    straight_line_distance=0.0,
+                    extra_length=0.0,
+                    detour_ratio=0.0,
+                    smoothness=0.0,
+                    segments_planned=0,
+                    segments_total=0,
+                )
                 self._reset_pipeline()
                 return
 
@@ -340,7 +466,6 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
                 self.get_logger().warn(
                     f"IK failed at waypoint {index+1}, error_code={code}. Skipping this waypoint."
                 )
-                # Skip this waypoint and continue
                 self._ik_index += 1
                 self._call_ik_for_current_waypoint()
                 return
@@ -351,6 +476,19 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
                 q = [float(name_to_pos[j]) for j in ARM_JOINTS]
             except KeyError as e:
                 self.get_logger().error(f"IK missing joint {e} at waypoint {index+1}")
+                self._runs_total += 1
+                self._publish_metrics(
+                    success=False,
+                    planning_time_s=0.0,
+                    nodes_added=0,
+                    path_length=0.0,
+                    straight_line_distance=0.0,
+                    extra_length=0.0,
+                    detour_ratio=0.0,
+                    smoothness=0.0,
+                    segments_planned=0,
+                    segments_total=0,
+                )
                 self._reset_pipeline()
                 return
 
@@ -362,15 +500,29 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
 
         return _cb
 
-    # ------------------- RRT + Trajectory publishing -------------------
+    #  RRT & Trajectory publishing
 
     def _run_rrt_and_publish(self) -> None:
         if self._q_start is None:
             self._reset_pipeline()
             return
 
+        self._runs_total += 1
+
         if not self._ik_joint_waypoints:
             self.get_logger().error("No valid IK waypoints. Resetting pipeline.")
+            self._publish_metrics(
+                success=False,
+                planning_time_s=0.0,
+                nodes_added=0,
+                path_length=0.0,
+                straight_line_distance=0.0,
+                extra_length=0.0,
+                detour_ratio=0.0,
+                smoothness=0.0,
+                segments_planned=0,
+                segments_total=0,
+            )
             self._reset_pipeline()
             return
 
@@ -379,32 +531,86 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         joint_targets.append(self.preclean_q)
         joint_targets.append(self.rest_q)
 
+        segments_total = len(joint_targets)
+        segments_planned = 0
+
+        total_nodes_added = 0
+        total_path_length = 0.0
+        total_straight = 0.0
+        total_smoothness = 0.0
+
+        t0 = time.perf_counter()
+
         full_path: List[List[float]] = []
         current = self._q_start
 
         for seg_idx, goal in enumerate(joint_targets, start=1):
-            self.get_logger().info(f"RRT segment {seg_idx}/{len(joint_targets)}...")
-            path = self.planner.plan(current, goal)
-            if not path:
+            self.get_logger().info(f"RRT segment {seg_idx}/{segments_total}...")
+
+            seg_straight = self._straight_line_distance_jointspace(current, goal)
+            seg_path = self.planner.plan(current, goal)
+
+            total_nodes_added += int(self.planner.stats.get("nodes_added", 0))
+
+            if not seg_path:
+                planning_time = time.perf_counter() - t0
+
+                extra_length = total_path_length - total_straight
+                detour_ratio = (total_path_length / total_straight) if total_straight > 1e-9 else 0.0
+
                 self.get_logger().error(f"RRT failed at segment {seg_idx}. Resetting pipeline.")
+                self._publish_metrics(
+                    success=False,
+                    planning_time_s=planning_time,
+                    nodes_added=total_nodes_added,
+                    path_length=total_path_length,
+                    straight_line_distance=total_straight,
+                    extra_length=extra_length,
+                    detour_ratio=detour_ratio,
+                    smoothness=total_smoothness,
+                    segments_planned=segments_planned,
+                    segments_total=segments_total,
+                )
                 self._reset_pipeline()
                 return
 
+            segments_planned += 1
+
+            total_straight += seg_straight
+            total_path_length += self._path_length_jointspace(seg_path)
+            total_smoothness += self._smoothness_second_difference(seg_path)
+
             if full_path:
-                full_path.extend(path[1:])
+                full_path.extend(seg_path[1:])
             else:
-                full_path.extend(path)
+                full_path.extend(seg_path)
 
             current = goal
+
+        planning_time = time.perf_counter() - t0
+
+        extra_length = total_path_length - total_straight
+        detour_ratio = (total_path_length / total_straight) if total_straight > 1e-9 else 0.0
+
+        self._publish_metrics(
+            success=True,
+            planning_time_s=planning_time,
+            nodes_added=total_nodes_added,
+            path_length=total_path_length,
+            straight_line_distance=total_straight,
+            extra_length=extra_length,
+            detour_ratio=detour_ratio,
+            smoothness=total_smoothness,
+            segments_planned=segments_planned,
+            segments_total=segments_total,
+        )
 
         self.get_logger().info(
             f"RRT complete. Joint states: {len(full_path)}. Collected edges: {len(self._rrt_edges_q)}"
         )
 
-        # Deterministic visualization (no async FK dependency beyond _fk_point_sync)
         self._publish_rrt_markers_from_edges(self._rrt_edges_q, max_edges=800)
 
-        # publish trajectory
         traj = JointTrajectory()
         traj.joint_names = ARM_JOINTS
         t = 0.0
@@ -419,13 +625,12 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         self.get_logger().info("Trajectory published.")
         self._reset_pipeline()
 
-    # ------------------- RRT edge callback (store only, super reliable) -------------------
+    # RRT edge callback
 
     def _on_rrt_edge_added(self, q_from, q_to) -> None:
-        # store edges in joint space, visualize later
         self._rrt_edges_q.append((list(q_from), list(q_to)))
 
-    # ------------------- FK + visualization (sync, after planning) -------------------
+    # FK & visualization
 
     def _q_key(self, q: List[float]) -> str:
         return ",".join(f"{v:.4f}" for v in q)
@@ -465,7 +670,6 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         edges_q: List[Tuple[List[float], List[float]]],
         max_edges: int = 800,
     ) -> None:
-        # Limit edges so RViz doesn't get flooded
         edges_q = edges_q[:max_edges]
 
         node_pts: List[Point] = []
@@ -513,7 +717,7 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
             f"Published RRT markers: nodes={len(node_pts)}, edge_points={len(edge_pts)}"
         )
 
-    # ------------------- Marker helpers -------------------
+    # Marker helpers 
 
     def _clear_markers(self) -> None:
         arr = MarkerArray()
@@ -521,27 +725,6 @@ class TiagoTableCleanerRRTVisualizationIK(Node):
         m.action = Marker.DELETEALL
         m.header.frame_id = self.planning_frame
         m.header.stamp = self.get_clock().now().to_msg()
-        arr.markers.append(m)
-        self.marker_pub.publish(arr)
-
-    def _publish_heartbeat_marker(self) -> None:
-        """Kept for reference, but not used (no pink dot)."""
-        arr = MarkerArray()
-        m = Marker()
-        m.header.frame_id = self.planning_frame
-        m.header.stamp = self.get_clock().now().to_msg()
-        m.ns = "debug"
-        m.id = 999
-        m.type = Marker.SPHERE
-        m.action = Marker.ADD
-        m.pose.position.x = 0.6
-        m.pose.position.y = 0.0
-        m.pose.position.z = 0.8
-        m.pose.orientation.w = 1.0
-        m.scale.x = 0.05
-        m.scale.y = 0.05
-        m.scale.z = 0.05
-        m.color = ColorRGBA(r=1.0, g=0.0, b=1.0, a=1.0)  # magenta
         arr.markers.append(m)
         self.marker_pub.publish(arr)
 

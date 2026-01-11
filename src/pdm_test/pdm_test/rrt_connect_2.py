@@ -29,6 +29,15 @@ class RRTConnect:
         self.goal_bias = goal_bias
         self.on_add_edge = on_add_edge
 
+        
+        self.stats = {
+            "iters": 0,
+            "nodes_added": 0,  
+        }
+
+    def _reset_stats(self) -> None:
+        self.stats = {"iters": 0, "nodes_added": 0}
+
     def _sample(self, q_goal: Sequence[float]) -> List[float]:
         if random.random() < self.goal_bias:
             return list(q_goal)
@@ -60,12 +69,14 @@ class RRTConnect:
         n_new = Node(q=q_new, parent=n_near)
         tree.append(n_new)
 
-        # <-- Visualization hook
+        
+        self.stats["nodes_added"] += 1
+
+        # Visualization hook
         if self.on_add_edge is not None:
             try:
                 self.on_add_edge(n_near.q, q_new)
             except Exception:
-                # Never let visualization crash planning
                 pass
 
         return n_new
@@ -89,6 +100,8 @@ class RRTConnect:
         return path
 
     def plan(self, q_start: Sequence[float], q_goal: Sequence[float]) -> Optional[List[List[float]]]:
+        self._reset_stats()
+
         if not self.is_state_valid(q_start):
             return None
         if not self.is_state_valid(q_goal):
@@ -98,6 +111,8 @@ class RRTConnect:
         Tb: List[Node] = [Node(list(q_goal))]
 
         for _ in range(self.max_iters):
+            self.stats["iters"] += 1
+
             q_rand = self._sample(q_goal)
             na = self._extend(Ta, q_rand)
             if na is not None:

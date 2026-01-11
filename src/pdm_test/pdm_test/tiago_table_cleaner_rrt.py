@@ -1,10 +1,4 @@
 #!/usr/bin/env python3
-"""
-Step-2 test node (RRT-only, no FK/IK):
-- Plans current → pre-clean using RRT-Connect
-- Validity: joint limits only
-- Publishes trajectory to arm controller
-"""
 
 from __future__ import annotations
 from typing import List, Optional
@@ -71,15 +65,15 @@ class TiagoTableCleanerRRT(Node):
         except KeyError:
             return None
 
-    # ---------- Validity ----------
+    # Validity 
     def is_state_valid(self, q: List[float]) -> bool:
         return all(lo <= qi <= hi for qi, (lo, hi) in zip(q, JOINT_LIMITS))
 
     def is_edge_valid(self, q1: List[float], q2: List[float]) -> bool:
-        # With FK removed, just check joint limits at endpoints
+        
         return self.is_state_valid(q1) and self.is_state_valid(q2)
 
-    # ---------- Service ----------
+    # Service 
     def _srv_clean_table(self, _, res):
         self.get_logger().info("Entered /clean_table (RRT-only)")
         q_start = self.get_current_q()
@@ -88,7 +82,7 @@ class TiagoTableCleanerRRT(Node):
             res.message = "No joint state"
             return res
             
-        # Define waypoints 
+        # waypoints 
         waypoints = [ self.preclean_q, self.wipe_front, self.wipe_left, self.wipe_back, self.preclean_q, self.rest_q, ]
 
         full_path = [] 
@@ -99,7 +93,7 @@ class TiagoTableCleanerRRT(Node):
                 res.success = False 
                 res.message = f"Planning failed to {goal}" 
                 return res
-            # Concatenate (skip duplicate start) 
+             
             if full_path: 
                 full_path += path_segment[1:] 
             else: 

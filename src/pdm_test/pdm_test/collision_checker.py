@@ -2,9 +2,7 @@
 from dataclasses import dataclass
 from typing import Sequence, List
 
-# -----------------------------
 # Table model
-# -----------------------------
 @dataclass(frozen=True)
 class TableModel:
     center_x: float = 0.75
@@ -13,8 +11,8 @@ class TableModel:
     size_x: float = 0.5
     size_y: float = 0.5
     size_z: float = 0.5
-    clearance: float = 0.02     # strict margin above top surface
-    inset: float = 0.03         # inset from table edges for wiping paths
+    clearance: float = 0.02     
+    inset: float = 0.03         
 
     @property
     def top_z(self) -> float:
@@ -38,9 +36,8 @@ class TableModel:
 
 TABLE = TableModel()
 
-# -----------------------------
 # Joint limits (Tiago arm)
-# -----------------------------
+
 JOINT_LIMITS: List[tuple] = [
     (0.0, 2.7489),
     (-1.5708, 1.0908),
