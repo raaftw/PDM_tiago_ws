@@ -1,0 +1,39 @@
+{
+  "mode": "nav2",
+  "world": "walls_blocks_barrel",
+  "map": null,
+  "nav2_params": null,
+  "nav2_mode": "tiago_public",
+  "use_sim_time": false,
+  "use_rviz": true,
+  "goal_location": "forward",
+  "start_time_iso": "2026-01-11T17:31:11",
+  "end_time_iso": "2026-01-11T17:32:51",
+  "duration_s": 100.32,
+  "goal_timing": {
+    "goal_set_time": 1768149092.7667408,
+    "goal_complete_time": 1768149115.3700297,
+    "goal_achievement_duration_s": 22.603,
+    "rrt_computation_time_s": null
+  },
+  "bag_dir": "/home/raaf/PDM_tiago_ws/runs/nav2/run_009/bag",
+  "cwd": "/home/raaf/PDM_tiago_ws",
+  "git": {
+    "commit": "2ab9ac2",
+    "branch": "testing-and-evalution"
+  },
+  "launch_return_code": -15,
+  "launch_cmd": [
+    "ros2",
+    "launch",
+    "pdm_test",
+    "benchmark_switch.launch.py",
+    "use_nav2:=true",
+    "world_name:=walls_blocks_barrel",
+    "bag_prefix:=/home/raaf/PDM_tiago_ws/runs/nav2/run_009/bag",
+    "use_sim_time:=false",
+    "use_rviz:=true",
+    "nav2_mode:=tiago_public",
+    "goal_location:=forward"
+  ]
+}

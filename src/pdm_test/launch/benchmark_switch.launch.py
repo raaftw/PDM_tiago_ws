@@ -50,7 +50,7 @@ def generate_launch_description():
         default_value=PathJoinSubstitution([
             FindPackageShare('pdm_test'),
             'maps',
-            PythonExpression(["'", world_name, "'", " + '_map.yaml'"])
+            'walls_blocks_map.yaml'
         ]),
         description='Full path to map YAML file'
     )
@@ -92,8 +92,8 @@ def generate_launch_description():
     declare_goal_location = DeclareLaunchArgument(
         'goal_location',
         default_value='center',
-        choices=['center', 'corner_1', 'corner_2', 'corner_3', 'corner_4'],
-        description='Predefined goal location: center, or corner_1/2/3/4 in front of tables'
+        choices=['center', 'corner_1_table', 'corner_2_table', 'corner_3_table', 'corner_4_table', 'corner_1_behind_table', 'corner_2_behind_table', 'corner_3_behind_table', 'corner_4_behind_table', 'forward', 'backward', 'left', 'right'],
+        description='Predefined goal location: center, corner_*_table, corner_*_behind_table, or forward/backward/left/right'
     )
 
     declare_goal_x = DeclareLaunchArgument(
@@ -137,7 +137,6 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'world_name': world_name,
-            'map': map_arg,
         }.items(),
         condition=UnlessCondition(use_nav2)
     )
@@ -148,10 +147,9 @@ def generate_launch_description():
     nav2_tiago_public = ExecuteProcess(
         cmd=[
             'ros2', 'launch', 'tiago_gazebo', 'tiago_gazebo.launch.py',
-            ['is_public_sim:=True'],
             ['world_name:=', world_name],
             ['navigation:=True'],
-            ['slam:=True']
+            ['is_public_sim:=True']
         ],
         output='screen',
         condition=IfCondition(PythonExpression([

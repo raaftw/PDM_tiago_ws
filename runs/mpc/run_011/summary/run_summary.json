@@ -1,0 +1,26 @@
+{
+  "path_length_m": 4.490116478356432,
+  "min_obstacle_distance": {
+    "count": 1386,
+    "mean": 1.299262251237254,
+    "min": 0.15000000596046448,
+    "max": 1.9986318349838257,
+    "p95": 1.9924214482307434,
+    "p99": 1.9959928452968598
+  },
+  "collision_detected": false,
+  "min_distance_value": 0.15000000596046448,
+  "final_position": {
+    "x": 0.028742990295035804,
+    "y": 4.036742623976812
+  },
+  "final_heading_rad": 1.5595065857256087,
+  "goal_position_error_m": 0.046649543489748216,
+  "goal_heading_error_rad": 0.010493414274391322,
+  "goal_heading_error_deg": 0.6012283506049559,
+  "goal_achievement_duration_s": 53.317,
+  "rrt_computation_time_s": 10.835317373275757,
+  "task_achieved": true,
+  "task_failed": false,
+  "failure_reasons": []
+}

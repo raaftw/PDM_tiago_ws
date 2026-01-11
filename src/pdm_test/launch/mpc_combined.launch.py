@@ -23,25 +23,20 @@ def generate_launch_description():
     declare_world_name = DeclareLaunchArgument(
         'world_name',
         default_value='walls_blocks',
-        description='World name (without .world extension). Map will be [worldname]_map.yaml'
+        description='World name (without .world extension)'
     )
 
 
     world_name = LaunchConfiguration('world_name')
     map_arg = LaunchConfiguration('map')
 
-    # Build map path exactly like the XML launch would resolve:
-    # $(find-pkg-share pdm_test)/maps/[world_name]_map.yaml
-    # Match XML: expose a `map` arg with default to cafe_map.yaml
+    # Always use walls_blocks_map.yaml regardless of world_name
     declare_map = DeclareLaunchArgument(
         'map',
-        # Default to $(find-pkg-share pdm_test)/maps/[world_name]_map.yaml
         default_value=PathJoinSubstitution([
             FindPackageShare('pdm_test'),
             'maps',
-            PythonExpression([
-                "'" , world_name, "' + '_map.yaml'"
-            ])
+            'walls_blocks_map.yaml'
         ]),
         description='Full path to map YAML file'
     )

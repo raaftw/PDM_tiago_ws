@@ -20,10 +20,18 @@ class GoalPublisher(Node):
         # Predefined goal locations (in front of tables - 4 corners)
         self.goal_locations = {
             'center': {'x': 0.0, 'y': 0.0, 'theta': 0.0},
-            'corner_1': {'x': 2.5, 'y': 1.8, 'theta': 1.57},      # Front-right
-            'corner_2': {'x': 2.5, 'y': -1.8, 'theta': -1.57},    # Back-right
-            'corner_3': {'x': -2.5, 'y': 1.8, 'theta': 1.57},     # Front-left
-            'corner_4': {'x': -2.5, 'y': -1.8, 'theta': -1.57},   # Back-left
+            'corner_1_table': {'x': 2.5, 'y': 1.8, 'theta': 1.57},      # Front-right
+            'corner_2_table': {'x': 2.5, 'y': -1.8, 'theta': -1.57},    # Back-right
+            'corner_3_table': {'x': -2.5, 'y': 1.8, 'theta': 1.57},     # Front-left
+            'corner_4_table': {'x': -2.5, 'y': -1.8, 'theta': -1.57},   # Back-left
+            'corner_1_behind_table': {'x': 3.5, 'y': 2.5, 'theta': 3.14},      # Front-right behind
+            'corner_2_behind_table': {'x': 3.5, 'y': -2.5, 'theta': 3.14},     # Back-right behind
+            'corner_3_behind_table': {'x': -3.5, 'y': 2.5, 'theta': 0.0},      # Front-left behind
+            'corner_4_behind_table': {'x': -3.5, 'y': -2.5, 'theta': 0.0},     # Back-left behind
+            'forward': {'x': 4.0, 'y': 0.0, 'theta': 0.0},              # Forward (x+)
+            'backward': {'x': -4.0, 'y': 0.0, 'theta': 3.14},           # Backward (x-)
+            'right': {'x': 0.0, 'y': -4.0, 'theta': -1.57},             # Right (y-)
+            'left': {'x': 0.0, 'y': 4.0, 'theta': 1.57},                # Left (y+)
         }
         
         # Parameters

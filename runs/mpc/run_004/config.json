@@ -1,0 +1,9 @@
+{
+  "mode": "mpc",
+  "world": "walls_blocks_barrel",
+  "map": null,
+  "nav2_params": null,
+  "nav2_mode": "tiago_public",
+  "goal_location": "corner_4_table",
+  "root": "/home/raaf/PDM_tiago_ws/runs"
+}

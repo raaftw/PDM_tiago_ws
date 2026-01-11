@@ -137,7 +137,7 @@ class MpcController(Node):
                 # MPC solver failed
                 self.consecutive_failures += 1
                 self.consecutive_zeros = 0
-            elif abs(v) < 5e-2 and abs(omega) < 0.16:
+            elif abs(v) < 5e-2 and abs(omega) < 0.20:
                 # MPC output is zero (might be stuck)
                 self.consecutive_zeros += 1
                 self.consecutive_failures = 0

@@ -1,0 +1,25 @@
+{
+  "path_length_m": 0.0,
+  "min_obstacle_distance": {
+    "count": 0,
+    "mean": NaN,
+    "min": NaN,
+    "max": NaN,
+    "p95": NaN,
+    "p99": NaN
+  },
+  "collision_detected": false,
+  "min_distance_value": null,
+  "final_position": null,
+  "final_heading_rad": null,
+  "goal_position_error_m": null,
+  "goal_heading_error_rad": null,
+  "goal_heading_error_deg": null,
+  "goal_achievement_duration_s": null,
+  "rrt_computation_time_s": null,
+  "task_achieved": false,
+  "task_failed": true,
+  "failure_reasons": [
+    "goal_not_reached"
+  ]
+}

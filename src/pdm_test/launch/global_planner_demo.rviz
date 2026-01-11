@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Grid1
         - /MarkerArray1
       Splitter Ratio: 0.5
     Tree Height: 653
@@ -92,7 +93,7 @@ Visualization Manager:
         Y: 0
         Z: 0
       Plane: XY
-      Plane Cell Count: 10
+      Plane Cell Count: 12
       Reference Frame: <Fixed Frame>
       Value: true
     - Class: rviz_default_plugins/TF
@@ -227,7 +228,8 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        {}
+        rrt_edges: true
+        rrt_nodes: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -273,25 +275,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 6.130134105682373
+      Distance: 14.535326957702637
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -2.506591320037842
-        Y: -1.0223404169082642
-        Z: 0.7595301270484924
+        X: 0.16767387092113495
+        Y: 0.05552314221858978
+        Z: 1.5336885452270508
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4397972822189331
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.19818115234375
+      Yaw: 3.1431424617767334
     Saved: ~
 Window Geometry:
   Displays:
@@ -309,5 +311,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1850
-  X: 70
+  X: 141
   Y: 27
