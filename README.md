@@ -80,7 +80,7 @@ Navigate base, then arm cleans at goal:
 
 ```bash
 # Terminal 1: Full base navigation
-ros2 launch pdm_test mpc_combined.launch.py world_name:=wiping_env
+ros2 launch pdm_test mpc_combined.launch.py world_name:=walls_blocks
 
 # Terminal 2: Table detector
 ros2 launch pdm_test table_detector.launch.py erode_iterations:=0
