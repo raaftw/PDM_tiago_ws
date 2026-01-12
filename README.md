@@ -16,6 +16,24 @@ TU Delft MSc Robotics students:
 
 **Prerequisites:** ROS 2 Humble + `~/tiago_public_ws` built.
 
+Set up the `~/tiago_public_ws` repository, following the installation instructions from: https://github.com/pal-robotics/tiago_simulation/tree/humble-devel.
+
+**Setting Up Custom Worlds:**
+
+The PDM workspace includes 8 custom Gazebo worlds. To make them available to TIAGo:
+
+```bash
+# Copy all custom worlds to tiago_public_ws
+cp ~/PDM_tiago_ws/src/pdm_test/worlds/*.world ~/tiago_public_ws/src/pal_gazebo_worlds/worlds/
+
+# Rebuild and source
+cd ~/tiago_public_ws
+colcon build --symlink-install
+source install/setup.bash
+```
+
+Once this is done, clone and build the project's workspace.
+
 ```bash
 cd ~
 git clone git@github.com:raaftw/PDM_tiago_ws.git
