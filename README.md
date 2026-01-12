@@ -74,59 +74,28 @@ ros2 run pdm_test tiago_table_cleaner_rrt_visualization_ik
 ros2 service call /clean_table std_srvs/srv/Trigger
 ```
 
-### Scenario 3: Integrated Base + Arm
-
-Navigate base, then arm cleans at goal:
-
-```bash
-# Terminal 1: Full base navigation
-ros2 launch pdm_test mpc_combined.launch.py world_name:=walls_blocks
-
-# Terminal 2: Table detector
-ros2 launch pdm_test table_detector.launch.py erode_iterations:=0
-
-# Terminal 3: Arm executor
-ros2 run pdm_test tiago_table_cleaner_rrt_visualization_ik
-
-# Terminal 4: Set base goal in RViz
-# → MPC navigates base
-# → At arrival: MPC calls /clean_table
-# → Arm executes automatically
-```
-
 ---
 
 ## Core Components
 
 ### Base Navigation
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `local_planner.py` | 604 | MPC controller: trajectory tracking + obstacle avoidance (10 Hz) |
-| `global_planner.py` | 295 | RRT* path planner: collision-free optimal paths |
-| `ground_truth_republisher.py` | 70 | Convert Gazebo odom → PoseStamped |
-| `obstacle_publisher.py` | 116 | Extract obstacles from costmap |
-| `models/tiago_diff_drive_model.py` | - | Differential drive kinematics |
-| `straight_driver.py` | 50 | Demo: simple velocity publisher |
+| File | Purpose |
+|---------------|
+| `local_planner.py` | MPC controller: trajectory tracking + obstacle avoidance (10 Hz) |
+| `global_planner.py` | RRT* path planner: collision-free optimal paths |
+| `ground_truth_republisher.py` | Convert Gazebo odom → PoseStamped |
+| `obstacle_publisher.py` | Extract obstacles from costmap |
+| `models/tiago_diff_drive_model.py` | Differential drive kinematics |
 
 ### Arm Manipulation
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `table_detector.py` | 346 | Detect tables via connected component analysis |
-| `rrt_connect.py` | 98 | RRT-Connect planner (joint space) |
-| `rrt_connect_2.py` | 128 | RRT-Connect extended |
-| `collision_checker.py` | 53 | Joint limits + self-collision checks |
-| `tiago_table_cleaner_rrt_visualization_ik.py` | 746 | Main arm executor: RRT-Connect + IK/FK + metrics |
-| `tiago_table_cleaner_rrt.py` | 136 | Basic arm executor (RRT-Connect only) |
+| File | Purpose |
+|------|---------|
+| `rrt_connect_2.py` | RRT-Connect planner |
+| `collision_checker.py` | Joint limits + self-collision checks |
+| `tiago_table_cleaner_rrt_visualization_ik.py` | Main arm executor: RRT-Connect + IK/FK + metrics |
 
-### Utilities
-
-| File | Lines | Purpose |
-|------|-------|---------|
-| `trajectory_generator.py` | 149 | Generate reference paths (line/circle) |
-| `coverage_planner.py` | 0 | (empty) |
-| `executor.py` | 0 | (empty) |
 
 ---
 
@@ -144,10 +113,7 @@ src/pdm_test/
 │   ├── global_planner.py             # RRT* global planner
 │   ├── ground_truth_republisher.py   # Odometry conversion
 │   ├── obstacle_publisher.py         # Costmap → obstacles
-│   ├── straight_driver.py            # Demo velocity pub
 │   │
-│   ├── table_detector.py             # Detect tables from map
-│   ├── rrt_connect.py                # RRT-Connect planner
 │   ├── rrt_connect_2.py              # RRT-Connect extended
 │   ├── collision_checker.py          # Joint limits + collision
 │   ├── tiago_table_cleaner_rrt_visualization_ik.py   # Main arm executor
@@ -156,8 +122,6 @@ src/pdm_test/
 │   ├── trajectory_generator.py       # Path generation
 │   ├── models/
 │   │   └── tiago_diff_drive_model.py # Kinematics
-│   └── utils/
-│
 ├── launch/
 │   ├── mpc_combined.launch.py        # Full base navigation ★
 │   ├── cafe.launch.py                # Gazebo + TIAGo base
