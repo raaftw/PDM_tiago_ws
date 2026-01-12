@@ -14,7 +14,7 @@ TU Delft MSc Robotics students:
 
 ## Quick Setup
 
-**Prerequisites:** ROS 2 Humble + `~/tiago_public_ws` built.
+**Prerequisites:** ROS 2 Humble + `~/tiago_public_ws` built, and casadi installed.
 
 Set up the `~/tiago_public_ws` repository, following the installation instructions from: https://github.com/pal-robotics/tiago_simulation/tree/humble-devel.
 
@@ -64,7 +64,7 @@ ros2 launch pdm_test mpc_combined.launch.py world_name:=walls_blocks
 
 Then in RViz:
 1. Click **"Nav2 Goal"** button
-2. Click goal location on map
+2. Click goal location on map (note: if goal is very close to obstacles, the path will be rejected)
 3. RRT* plans → MPC executes
 
 **Available worlds:** `cafe`, `cafe_table`, `walls`, `walls_blocks`, `wiping_env`, `wiping_env_small_table`
