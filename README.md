@@ -99,7 +99,7 @@ ros2 service call /clean_table std_srvs/srv/Trigger
 ### Base Navigation
 
 | File | Purpose |
-|---------------|
+|------|---------|
 | `local_planner.py` | MPC controller: trajectory tracking + obstacle avoidance (10 Hz) |
 | `global_planner.py` | RRT* path planner: collision-free optimal paths |
 | `ground_truth_republisher.py` | Convert Gazebo odom → PoseStamped |
