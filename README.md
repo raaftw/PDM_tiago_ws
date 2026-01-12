@@ -135,9 +135,7 @@ src/pdm_test/
 │   ├── rrt_connect_2.py              # RRT-Connect extended
 │   ├── collision_checker.py          # Joint limits + collision
 │   ├── tiago_table_cleaner_rrt_visualization_ik.py   # Main arm executor
-│   ├── tiago_table_cleaner_rrt.py    # Basic arm executor
 │   │
-│   ├── trajectory_generator.py       # Path generation
 │   ├── models/
 │   │   └── tiago_diff_drive_model.py # Kinematics
 ├── launch/
