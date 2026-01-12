@@ -265,22 +265,4 @@ goal_bias = 0.5              # Goal sampling probability
 
 ---
 
-## Verify Installation
-
-```bash
-# Build
-cd ~/PDM_tiago_ws
-colcon build --symlink-install
-
-# Check entry points
-grep "console_scripts" setup.py
-
-# Test nodes exist
-ros2 run pdm_test mpc_controller --help
-ros2 run pdm_test global_planner --help
-ros2 launch pdm_test mpc_combined.launch.py --show-args
-```
-
----
-
 **Last Updated:** January 12, 2026  
