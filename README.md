@@ -57,7 +57,7 @@ Detect tables and trigger arm wiping:
 
 ```bash
 # Terminal 1: Launch Gazebo
-ros2 launch pdm_test cafe.launch.py world_name:=wiping_env
+ros2 launch pdm_test cafe.launch.py world_name:=wiping_env_small_table
 
 # Terminal 2: Detect tables
 ros2 launch pdm_test table_detector.launch.py \
